@@ -24,7 +24,7 @@ public class IngredientController {
     }
 
     @PutMapping("/{id}")
-    IngredientDto update(@PathVariable Long id, @RequestBody IngredientDto ingredientDto) throws Exception {
+    IngredientDto update(@PathVariable Long id, @RequestBody IngredientDto ingredientDto) {
         return ingredientService.update(id, ingredientDto.getName());
     }
 
