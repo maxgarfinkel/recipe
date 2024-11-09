@@ -23,7 +23,7 @@ class RecipeIntegrationTest extends SpringTestBase {
 
         var recipeDto = new RecipeDto(null,
                 "aRecipe",
-                "do some stuff", List.of(ingredientQuantityDto));
+                "do some stuff", 1, List.of(ingredientQuantityDto));
 
         recipeDto = restClient.post()
                 .uri("/api/v1/recipe/")
@@ -35,6 +35,7 @@ class RecipeIntegrationTest extends SpringTestBase {
         assertThat(recipeDto.getId()).isNotNull();
         assertThat(recipeDto.getName()).isEqualTo("aRecipe");
         assertThat(recipeDto.getMethod()).isEqualTo("do some stuff");
+        assertThat(recipeDto.getServings()).isEqualTo(1);
         var ingredientQty = recipeDto.getIngredientQuantities().getFirst();
         assertThat(ingredientQty.getQuantity()).isEqualTo(1d);
         assertThat(ingredientQty.getIngredient().getName()).isEqualTo("basil");
@@ -53,7 +54,7 @@ class RecipeIntegrationTest extends SpringTestBase {
         var ingredientQtys = recipeDto.getIngredientQuantities();
         ingredientQtys.add(newIngredientQuantityDto);
         recipeDto = new RecipeDto(recipeDto.getId(),
-                "updated name", recipeDto.getMethod(),
+                "updated name", recipeDto.getMethod(), 2,
                 ingredientQtys);
 
         recipeDto = restClient.put()
@@ -64,6 +65,7 @@ class RecipeIntegrationTest extends SpringTestBase {
 
         assertThat(recipeDto).isNotNull();
         assertThat(recipeDto.getName()).isEqualTo("updated name");
+        assertThat(recipeDto.getServings()).isEqualTo(2);
         assertThat(recipeDto.getIngredientQuantities().size()).isEqualTo(2);
 
         //Delete
