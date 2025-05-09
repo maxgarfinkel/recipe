@@ -17,7 +17,8 @@ function RecipePage() {
                 <>
                     <Link to={'/'}>All recipes</Link>
                     <h1>{recipe.name}</h1>
-                    <p>{recipe.servings}</p>
+                    <p>Quantity for {recipe.servings} serving{recipe.servings > 1 ? 's' : ''}</p>
+                    <h2>Ingredients</h2>
                     <ul>
                         {recipe.ingredientQuantities.map((ingredientQuantities => (
                             <li key={ingredientQuantities.id}>
@@ -25,6 +26,7 @@ function RecipePage() {
                             </li>
                         )))}
                     </ul>
+                    <h2>Method</h2>
                     <p>{recipe.method}</p>
                 </>
             }
