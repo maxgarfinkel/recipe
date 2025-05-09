@@ -2,7 +2,7 @@ import {StrictMode} from 'react'
 import {createRoot} from 'react-dom/client'
 import './index.css'
 import {BrowserRouter, Route, Routes,} from "react-router-dom";
-import Header from "./recipe/Header.tsx";
+import Header from "./Header.tsx";
 import RecipeEditorPage from "./recipe/RecipeEditorPage.tsx";
 import RecipeMenu from "./recipe/RecipeMenu.tsx";
 import RecipePage from "./recipe/RecipePage.tsx";
