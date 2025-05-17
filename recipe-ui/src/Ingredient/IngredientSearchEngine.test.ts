@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
-import {Ingredient, Unit} from "../Types.ts";
+import {Ingredient, JsonUnit} from "../Types.ts";
 import searchIngredients from "./IngredientSearchEngine.ts";
 
-const gram:Unit = {id:BigInt(1), name:"gram", abbreviation:"g", base:null, baseFactor:1}
+const gram:JsonUnit = {id:BigInt(1), name:"gram", abbreviation:"g", base:null, baseFactor:1}
 const ingredients:Ingredient[] = [
     {id:BigInt(0), name:"a", unit:gram},
     {id:BigInt(1), name:"ab", unit:gram},

@@ -1,10 +1,12 @@
-import {Ingredient, IngredientQuantity, Unit} from "../Types.ts";
+import {Ingredient, IngredientQuantity} from "../Types.ts";
 import {useRef, useState} from "react";
 import searchIngredients from "./IngredientSearchEngine.ts";
+import NewIngredientModal from "./NewIngredientModal.tsx";
+import {Units} from "../Unit/Units.ts";
 
 export interface IngredientsSelectorProps {
     ingredients: Ingredient[]
-    units: Unit[]
+    units: Units
     addIngredient: (ingredientQuantity: IngredientQuantity) => void
 }
 
@@ -18,6 +20,8 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
     const [ingredientSearchTerm, setIngredientSearchTerm] = useState<string>("");
     const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
     const [selectedResult, setSelectedResultIndex] = useState<number | null>(null);
+
+    const [showNewIngredientModal, setShowNewIngredientModal] = useState<boolean>(false);
 
     const onKeyPress = (event) => {
 
@@ -58,11 +62,21 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
             setSelectedResultIndex(null);
             setSelectedIngredient(null);
             setQuantity("");
+        } else {
+            setShowNewIngredientModal(true);
         }
     }
 
     return (<>
         {ingredients.length < 0 && <>Loading...</>}
+            {showNewIngredientModal &&
+                <NewIngredientModal
+                    name={ingredientSearchTerm}
+                    units={units}
+                    quantity={quantity}
+                    closeModal={() => {setShowNewIngredientModal(false);}}
+                    ingredientCallback={addIngredient}
+                />}
         {ingredients.length > 0 &&
             <>
                 <div className="border">

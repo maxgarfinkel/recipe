@@ -25,6 +25,7 @@ function RecipePage() {
     const [ingredients, setIngredients] = useState<IngredientQuantity[]>([]);
 
     const addIngredient = (ingredient: IngredientQuantity) => {
+        console.log(ingredient);
         setIngredients([...ingredients, ingredient])
     }
 
@@ -34,7 +35,7 @@ function RecipePage() {
             <h1>New Recipe</h1>
             {ingredientLoading || unitLoading && <p>Loading...</p>}
             {ingredientError || unitError && <p>Error</p>}
-            {allIngredients && allIngredients.length > 0 && units.length > 0 &&
+            {allIngredients && allIngredients.length > 0 && units &&
                 <>
                     <div>
                         <label htmlFor="name">Recipe Name</label>

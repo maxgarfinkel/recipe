@@ -1,14 +1,14 @@
-export interface Unit {
+export interface JsonUnit {
     id: bigint,
     name: string,
     abbreviation: string,
-    base: Unit | null,
+    base: JsonUnit | null,
     baseFactor: number
 }
 export interface Ingredient {
     name: string
     id: bigint | null
-    unit: Unit
+    unit: JsonUnit
 }
 
 export interface IngredientQuantity {

@@ -1,12 +1,14 @@
 import {useEffect, useState} from "react";
-import {Ingredient, Recipe, Unit} from "./Types.ts";
+import {Ingredient, Recipe, JsonUnit} from "./Types.ts";
 import axios, {AxiosResponse} from "axios";
+import {Units} from "./Unit/Units.ts";
+import {Unit} from "./Unit/Unit.ts";
 
 const apiBase = import.meta.env.VITE_API_BASE;
 
 export function useGetUnits(getUnits: boolean) {
 
-    const [units, setUnits] = useState<Unit[]>([]);
+    const [units, setUnits] = useState<Units>();
     const [unitError, setUnitUnitError] = useState<string | null>(null);
     const [unitLoading, setUnitUnitLoading] = useState(false);
 
@@ -16,7 +18,9 @@ export function useGetUnits(getUnits: boolean) {
                 try {
                     setUnitUnitLoading(true);
                     const response: AxiosResponse = await axios.get(apiBase+'unit/');
-                    const units: Unit[] = response.data;
+                    const units: Units = new Units(response.data.map((jsonUnit: JsonUnit) => {
+                        return Unit.fromJson(jsonUnit);
+                    }));
                     setUnits(units);
                 } catch (error) {
                     setUnitUnitError((error as Error).message);
@@ -26,7 +30,7 @@ export function useGetUnits(getUnits: boolean) {
             }
         )()
     }, [getUnits])
-    return { units, error: unitError, loading: unitLoading }
+    return { units, unitError, unitLoading }
 }
 
 export function useFetchRecipes(getRecipes: boolean) {

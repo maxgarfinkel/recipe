@@ -15,7 +15,7 @@ function RecipePage() {
             {error && <p>There was an error loading recipes</p>}
             {recipe &&
                 <>
-                    <Link to={'/'}>All recipes</Link>
+                    <Link to={'/'}>&lsaquo; All recipes</Link>
                     <h1>{recipe.name}</h1>
                     <p>Quantity for {recipe.servings} serving{recipe.servings > 1 ? 's' : ''}</p>
                     <h2>Ingredients</h2>
