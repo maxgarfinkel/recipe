@@ -6,7 +6,7 @@ import {Unit} from "./Unit/Unit.ts";
 
 const apiBase = import.meta.env.VITE_API_BASE;
 
-export function useGetUnits(getUnits: boolean) {
+export function useFetchUnits(getUnits: boolean) {
 
     const [units, setUnits] = useState<Units>();
     const [unitError, setUnitUnitError] = useState<string | null>(null);
@@ -114,7 +114,7 @@ export function useSaveRecipe(getRecipes: boolean) {
     return { recipes, error, loading }
 }
 
-export function useGetIngredients(getIngredients: boolean) {
+export function useFetchIngredients(getIngredients: boolean) {
 
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -139,3 +139,23 @@ export function useGetIngredients(getIngredients: boolean) {
     return { allIngredients: ingredients, ingredientError: error, ingredientLoading: loading }
 }
 
+export function useSaveIngredient() {
+    const [savedIngredient, setSavedIngredient] = useState<Ingredient>();
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const saveIngredient = async (ingredient: Ingredient) => {
+                try {
+                    setLoading(true);
+                    const response: AxiosResponse = await axios.post(apiBase+'ingredient/', ingredient);
+                    setSavedIngredient(response.data);
+                } catch (error) {
+                    setError((error as Error).message);
+                }
+            };
+
+    return { savedIngredient: savedIngredient,
+        saveIngredientError: error,
+        saveIngredientLoading: loading,
+        saveIngredient}
+}

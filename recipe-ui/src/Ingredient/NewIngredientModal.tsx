@@ -1,6 +1,7 @@
 import {IngredientQuantity} from "../Types.ts";
 import {useEffect, useRef, useState} from "react";
 import {Units} from "../Unit/Units.ts";
+import {useSaveIngredient} from "../apiHooks.ts";
 
 export interface NewIngredientModalProps {
     name: string;
@@ -14,6 +15,7 @@ function NewIngredientModal({...props}: NewIngredientModalProps) {
     const closeModal = props.closeModal;
     const units = props.units;
 
+    const {savedIngredient, saveIngredientError, saveIngredientLoading, saveIngredient} = useSaveIngredient()
     const [name, setName] = useState(props.name);
     const [quantity, setQuantity] = useState(props.quantity);
     const [selectedUnitId, setSelectedUnitId] = useState(units.getFirst().id.toString());
@@ -25,20 +27,32 @@ function NewIngredientModal({...props}: NewIngredientModalProps) {
         inputRef.current?.focus();
     }, []);
 
+    useEffect(() => {
+        if(savedIngredient) {
+            props.ingredientCallback({
+                id: null,
+                ingredient: savedIngredient,
+                quantity: parseInt(quantity)
+            });
+            closeModal();
+        }
+    }, [savedIngredient]);
+
     const createNewIngredient = () => {
         console.log(selectedUnitId, units);
         const unit = units.getUnit(selectedUnitId)
-        const ingredient: IngredientQuantity = {
+
+        saveIngredient({
             id: null,
-            ingredient: {
-                id:null,
-                name: name,
-                unit: unit
-            },
-            quantity: Number.parseInt(quantity)
-        }
-        props.ingredientCallback(ingredient);
-        closeModal();
+            name: name,
+            unit: {
+                id: unit.id,
+                name: unit.name,
+                abbreviation: unit.abbreviation,
+                base: unit.base,
+                baseFactor: unit.baseFactor
+            }
+        });
     }
 
 
