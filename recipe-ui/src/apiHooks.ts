@@ -89,29 +89,25 @@ export function useFetchRecipe(recipeId: string | undefined) {
 }
 
 
-export function useSaveRecipe(getRecipes: boolean) {
+export function useSaveRecipe() {
 
-    const [recipes, setRecipes] = useState<Recipe[]>([]);
+    const [savedRecipe, setSavedRecipe] = useState<Recipe>();
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        (
-            async () => {
-                try {
-                    setLoading(true);
-                    const response: AxiosResponse = await axios.get(apiBase+'recipe/');
-                    const recipes: Recipe[] = response.data;
-                    setRecipes(recipes);
-                } catch (error) {
-                    setError((error as Error).message);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        )()
-    }, [getRecipes])
-    return { recipes, error, loading }
+    const saveRecipe = async (recipe: Recipe) => {
+       try {
+            setLoading(true);
+            const response: AxiosResponse = await axios.post(apiBase+'recipe/', recipe);
+            setSavedRecipe(response.data);
+        } catch (error) {
+            setError((error as Error).message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { savedRecipe, error, loading, saveRecipe }
 }
 
 export function useFetchIngredients(getIngredients: boolean) {
