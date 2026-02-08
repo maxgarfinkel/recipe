@@ -1,13 +1,22 @@
 import {Link, useParams} from "react-router-dom";
 import "./RecipePage.css";
 import {useFetchRecipe} from "../apiHooks.ts";
+import {useEffect} from "react";
 
 
 function RecipePage() {
 
     const {id} = useParams();
 
-    const {recipe, loading, error} = useFetchRecipe(id);
+    const {recipe, loading, error, fetchRecipe} = useFetchRecipe();
+
+    useEffect(() => {
+        if(!id) {
+            throw new Error('No recipe id provided');
+        }
+        const recipeId = parseInt(id);
+        fetchRecipe(recipeId)
+    },[fetchRecipe, id])
 
     return (
         <>

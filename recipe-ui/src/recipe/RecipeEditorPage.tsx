@@ -9,20 +9,28 @@ import {
 import "./RecipeEditorPage.css";
 
 import '@mdxeditor/editor/style.css'
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useFetchIngredients, useFetchUnits} from "../apiHooks.ts";
 import IngredientsSelector from "../Ingredient/IngredientsSelector.tsx";
 import {IngredientQuantity} from "../Types.ts";
 
 function RecipePage() {
 
-    const {allIngredients, ingredientLoading, ingredientError} = useFetchIngredients(true);
-    const {units, unitLoading, unitError} = useFetchUnits(true);
+    const {allIngredients, ingredientLoading, ingredientError, fetchIngredients} = useFetchIngredients();
+    const {units, unitLoading, unitError, fetchUnits} = useFetchUnits();
 
     const [method, setMethod] = useState<string>("method");
     const [name, setName] = useState<string>("");
     const [servings, setServings] = useState<string>();
     const [ingredients, setIngredients] = useState<IngredientQuantity[]>([]);
+
+    useEffect(() => {
+        fetchUnits();
+    },[fetchUnits]);
+
+    useEffect(() => {
+        fetchIngredients();
+    }, [fetchIngredients]);
 
     const addIngredient = (ingredient: IngredientQuantity) => {
         console.log(ingredient);

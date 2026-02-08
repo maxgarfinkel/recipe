@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useState} from "react";
 import {Ingredient, Recipe, JsonUnit} from "./Types.ts";
 import axios, {AxiosResponse} from "axios";
 import {Units} from "./Unit/Units.ts";
@@ -6,13 +6,13 @@ import {Unit} from "./Unit/Unit.ts";
 
 const apiBase = import.meta.env.VITE_API_BASE;
 
-export function useFetchUnits(getUnits: boolean) {
+export function useFetchUnits() {
 
     const [units, setUnits] = useState<Units>();
     const [unitError, setUnitUnitError] = useState<string | null>(null);
     const [unitLoading, setUnitUnitLoading] = useState(false);
 
-    useEffect(() => {
+    const fetchUnits = useCallback(() => {
         (
             async () => {
                 try {
@@ -29,8 +29,8 @@ export function useFetchUnits(getUnits: boolean) {
                 }
             }
         )()
-    }, [getUnits])
-    return { units, unitError, unitLoading }
+    }, [])
+    return { units, unitError, unitLoading, fetchUnits }
 }
 
 export function useFetchRecipes() {
@@ -58,25 +58,20 @@ export function useFetchRecipes() {
     return { recipes, error, loading, fetchRecipes }
 }
 
-export function useFetchRecipe(recipeId: string | undefined) {
+export function useFetchRecipe() {
 
     const [recipe, setRecipe] = useState<Recipe | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
+    const fetchRecipe = useCallback((recipeId: number) => {
         (
             async () => {
                 try {
                     setLoading(true);
-                    const id = Number.parseInt(recipeId || '')
-                    if(!recipeId || isNaN(id)) {
-                        setError('Invalid recipe id');
-                    } else {
-                        const response: AxiosResponse = await axios.get(apiBase+'recipe/'+recipeId);
-                        const recipe: Recipe = response.data;
-                        setRecipe(recipe);
-                    }
+                    const response: AxiosResponse = await axios.get(apiBase+'recipe/'+recipeId);
+                    const recipe: Recipe = response.data;
+                    setRecipe(recipe);
                 } catch (error) {
                     setError((error as Error).message);
                 } finally {
@@ -84,8 +79,8 @@ export function useFetchRecipe(recipeId: string | undefined) {
                 }
             }
         )()
-    }, [recipeId])
-    return { recipe, error, loading }
+    }, [])
+    return { recipe, error, loading, fetchRecipe }
 }
 
 
@@ -110,13 +105,13 @@ export function useSaveRecipe() {
     return { savedRecipe, error, loading, saveRecipe }
 }
 
-export function useFetchIngredients(getIngredients: boolean) {
+export function useFetchIngredients() {
 
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
+    const fetchIngredients = useCallback(() => {
         (
             async () => {
                 try {
@@ -131,8 +126,8 @@ export function useFetchIngredients(getIngredients: boolean) {
                 }
             }
         )()
-    }, [getIngredients])
-    return { allIngredients: ingredients, ingredientError: error, ingredientLoading: loading }
+    }, [])
+    return { allIngredients: ingredients, ingredientError: error, ingredientLoading: loading, fetchIngredients }
 }
 
 export function useSaveIngredient() {
