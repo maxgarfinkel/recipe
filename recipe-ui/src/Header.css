@@ -1,3 +1,4 @@
+@import "tailwindcss";
 header{
     @apply mb-12
 }

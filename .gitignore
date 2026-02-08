@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Nested js project###
+recipe-ui/coverage
