@@ -2,6 +2,7 @@ import {useFetchRecipes} from "../apiHooks.ts";
 import {Recipe} from "../Types.ts";
 import "./RecipeMenu.css";
 import {Link} from "react-router-dom";
+import {useEffect} from "react";
 
 function alphabeticalRecipes(recipes: Recipe[]): Map<string, Recipe[]> {
     const alphabeticalRecipes = new Map<string, Recipe[]>();
@@ -19,7 +20,11 @@ const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
 
 function RecipeMenu() {
 
-    const {recipes,loading,error} = useFetchRecipes(true);
+    const {recipes,loading,error, fetchRecipes} = useFetchRecipes();
+
+    useEffect(() => {
+        fetchRecipes()
+    },[fetchRecipes]);
 
     return (<>
     <h1>Recipes</h1>

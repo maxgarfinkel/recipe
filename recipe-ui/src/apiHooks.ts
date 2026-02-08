@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {Ingredient, Recipe, JsonUnit} from "./Types.ts";
 import axios, {AxiosResponse} from "axios";
 import {Units} from "./Unit/Units.ts";
@@ -33,13 +33,13 @@ export function useFetchUnits(getUnits: boolean) {
     return { units, unitError, unitLoading }
 }
 
-export function useFetchRecipes(getRecipes: boolean) {
+export function useFetchRecipes() {
 
     const [recipes, setRecipes] = useState<Recipe[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
+    const fetchRecipes = useCallback(() => {
         (
             async () => {
                 try {
@@ -54,8 +54,8 @@ export function useFetchRecipes(getRecipes: boolean) {
                 }
             }
         )()
-    }, [getRecipes])
-    return { recipes, error, loading }
+    }, [])
+    return { recipes, error, loading, fetchRecipes }
 }
 
 export function useFetchRecipe(recipeId: string | undefined) {
