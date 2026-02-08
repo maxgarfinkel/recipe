@@ -7,6 +7,7 @@ import { Recipe } from './Types';
 
 // Mock axios
 vi.mock('axios');
+const mockedAxios = vi.mocked(axios, true)
 
 describe('useSaveRecipe', () => {
     const mockRecipe: Recipe = {
@@ -37,7 +38,7 @@ describe('useSaveRecipe', () => {
 
     it('should successfully save a recipe', async () => {
         // Mock successful axios post
-        (axios.post as any).mockResolvedValueOnce({ 
+        mockedAxios.post.mockResolvedValueOnce({
             data: mockSavedRecipe 
         });
 
@@ -59,7 +60,7 @@ describe('useSaveRecipe', () => {
     it('should handle save failure', async () => {
         const errorMessage = 'Failed to save recipe';
         // Mock failed axios post
-        (axios.post as any).mockRejectedValueOnce(new Error(errorMessage));
+        mockedAxios.post.mockRejectedValueOnce(new Error(errorMessage));
 
         const { result } = renderHook(() => useSaveRecipe());
 
@@ -78,7 +79,7 @@ describe('useSaveRecipe', () => {
 
     it('should set loading state while saving', async () => {
         // Mock delayed axios post
-        (axios.post as any).mockImplementationOnce(() => 
+        mockedAxios.post.mockImplementationOnce(() =>
             new Promise(resolve => 
                 setTimeout(() => 
                     resolve({ data: mockSavedRecipe }), 100
@@ -105,7 +106,7 @@ describe('useSaveRecipe', () => {
 
     it('should maintain previous savedRecipe state on error', async () => {
         // First save succeeds
-        (axios.post as any).mockResolvedValueOnce({ 
+        mockedAxios.post.mockResolvedValueOnce({
             data: mockSavedRecipe 
         });
 
@@ -116,7 +117,7 @@ describe('useSaveRecipe', () => {
         });
 
         // Second save fails
-        (axios.post as any).mockRejectedValueOnce(new Error('Failed'));
+        mockedAxios.post.mockRejectedValueOnce(new Error('Failed'));
 
         await act(async () => {
             await result.current.saveRecipe({...mockRecipe, name: "New Name"});
