@@ -28,13 +28,13 @@ function Header() {
                         <div className="md:container mx-auto text-right text-white font-sans font-light">
                             <ul className="p-2">
                                 <li className="pb-2">
-                                    <Link to={`/`}>Home</Link>
+                                    <Link onClick={() => {setShowMenu(!showMenu)}} to={`/`}>Home</Link>
                                 </li>
                                 <li className="pb-2">
-                                    <Link to={`/new-recipe`}>Add recipe</Link>
+                                    <Link onClick={() => {setShowMenu(!showMenu)}} to={`/new-recipe`}>Add recipe</Link>
                                 </li>
                                 <li>
-                                    <Link to={`/manage-ingredients`}>Manage ingredients</Link>
+                                    <Link onClick={() => {setShowMenu(!showMenu)}} to={`/manage-ingredients`}>Manage ingredients</Link>
                                 </li>
                             </ul>
                         </div>
