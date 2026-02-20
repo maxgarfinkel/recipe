@@ -1,31 +1,18 @@
-import {
-    headingsPlugin,
-    linkPlugin,
-    listsPlugin,
-    markdownShortcutPlugin,
-    MDXEditor,
-    MDXEditorMethods,
-    toolbarPlugin,
-    UndoRedo,
-    Separator,
-    BoldItalicUnderlineToggles,
-    BlockTypeSelect,
-    ListsToggle,
-} from '@mdxeditor/editor'
 import "./RecipeEditorPage.css";
-
-import '@mdxeditor/editor/style.css'
-import {useEffect, useReducer, useRef} from "react";
-import {useFetchIngredients, useFetchUnits, useSaveRecipe} from "../apiHooks.ts";
+import { useEffect, useReducer, useRef } from "react";
+import { MDXEditorMethods } from '@mdxeditor/editor';
+import { useFetchIngredients, useFetchUnits, useSaveRecipe } from "../apiHooks.ts";
 import IngredientsSelector from "../Ingredient/IngredientsSelector.tsx";
-import {IngredientQuantity, Recipe} from "../Types.ts";
+import { IngredientQuantity, Recipe } from "../Types.ts";
+import MethodEditor from "./MethodEditor.tsx";
+import IngredientList from "./IngredientList.tsx";
+import { useToast } from "../hooks/useToast.ts";
 
 type FormState = {
     name: string;
     servings: string;
     method: string;
     ingredients: IngredientQuantity[];
-    toast: { message: string; type: 'success' | 'error' } | null;
 };
 
 type FormAction =
@@ -33,16 +20,13 @@ type FormAction =
     | { type: 'set_servings'; value: string }
     | { type: 'set_method'; value: string }
     | { type: 'add_ingredient'; ingredient: IngredientQuantity }
-    | { type: 'saved' }
-    | { type: 'save_failed'; error: string }
-    | { type: 'dismiss_toast' };
+    | { type: 'saved' };
 
 const initialState: FormState = {
     name: '',
     servings: '',
     method: '',
     ingredients: [],
-    toast: null,
 };
 
 function formReducer(state: FormState, action: FormAction): FormState {
@@ -56,22 +40,20 @@ function formReducer(state: FormState, action: FormAction): FormState {
         case 'add_ingredient':
             return { ...state, ingredients: [...state.ingredients, action.ingredient] };
         case 'saved':
-            return { ...initialState, toast: { message: 'Recipe saved successfully!', type: 'success' } };
-        case 'save_failed':
-            return { ...state, toast: { message: `Could not save recipe: ${action.error}`, type: 'error' } };
-        case 'dismiss_toast':
-            return { ...state, toast: null };
+            return { ...initialState };
     }
 }
 
 function RecipeEditorPage() {
 
-    const {allIngredients, ingredientLoading, ingredientError, fetchIngredients} = useFetchIngredients();
-    const {units, unitLoading, unitError, fetchUnits} = useFetchUnits();
-    const {savedRecipe, error: saveError, loading: saving, saveRecipe} = useSaveRecipe();
+    const { allIngredients, ingredientLoading, ingredientError, fetchIngredients } = useFetchIngredients();
+    const { units, unitLoading, unitError, fetchUnits } = useFetchUnits();
+    const { savedRecipe, error: saveError, loading: saving, saveRecipe } = useSaveRecipe();
 
     const [state, dispatch] = useReducer(formReducer, initialState);
-    const {name, servings, method, ingredients, toast} = state;
+    const { name, servings, method, ingredients } = state;
+
+    const { toast, showToast, dismissToast } = useToast();
 
     const ref = useRef<MDXEditorMethods>(null);
 
@@ -87,18 +69,13 @@ function RecipeEditorPage() {
         if (!savedRecipe) return;
         ref.current?.setMarkdown('');
         dispatch({ type: 'saved' });
-    }, [savedRecipe]);
+        showToast('Recipe saved successfully!', 'success');
+    }, [savedRecipe, showToast]);
 
     useEffect(() => {
         if (!saveError) return;
-        dispatch({ type: 'save_failed', error: saveError });
-    }, [saveError]);
-
-    useEffect(() => {
-        if (!toast) return;
-        const timer = setTimeout(() => dispatch({ type: 'dismiss_toast' }), 4000);
-        return () => clearTimeout(timer);
-    }, [toast]);
+        showToast(`Could not save recipe: ${saveError}`, 'error');
+    }, [saveError, showToast]);
 
     const handleSave = () => {
         const recipe: Recipe = {
@@ -143,15 +120,7 @@ function RecipeEditorPage() {
 
                     <div>
                         <h2>Ingredients</h2>
-                        {ingredients.length > 0 &&
-                            <ul>
-                                {ingredients.map((ingredient) => (
-                                    <li key={ingredient.ingredient.id}>
-                                        {ingredient.quantity} {ingredient.ingredient.unit.abbreviation} {ingredient.ingredient.name}
-                                    </li>
-                                ))}
-                            </ul>
-                        }
+                        <IngredientList ingredients={ingredients} />
                         <IngredientsSelector
                             ingredients={allIngredients}
                             units={units}
@@ -161,30 +130,11 @@ function RecipeEditorPage() {
 
                     <div>
                         <h2>Method</h2>
-                        <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                            <MDXEditor
-                                ref={ref}
-                                markdown={method}
-                                onChange={(e) => dispatch({ type: 'set_method', value: e })}
-                                plugins={[
-                                    toolbarPlugin({
-                                        toolbarContents: () => (<>
-                                            <UndoRedo />
-                                            <Separator />
-                                            <BlockTypeSelect />
-                                            <Separator />
-                                            <BoldItalicUnderlineToggles options={['Bold', 'Italic']} />
-                                            <Separator />
-                                            <ListsToggle options={['bullet', 'number']} />
-                                        </>)
-                                    }),
-                                    headingsPlugin(),
-                                    listsPlugin(),
-                                    linkPlugin(),
-                                    markdownShortcutPlugin(),
-                                ]}
-                            />
-                        </div>
+                        <MethodEditor
+                            ref={ref}
+                            value={method}
+                            onChange={(v) => dispatch({ type: 'set_method', value: v })}
+                        />
                     </div>
 
                     <div>
@@ -200,12 +150,12 @@ function RecipeEditorPage() {
             }
 
             {toast && (
-                <div className={`fixed bottom-6 right-6 z-200 flex items-center gap-4 px-5 py-4 rounded-xl shadow-xl text-white text-sm font-medium max-w-sm
+                <div className={`fixed bottom-6 right-6 z-[200] flex items-center gap-4 px-5 py-4 rounded-xl shadow-xl text-white text-sm font-medium max-w-sm
                     ${toast.type === 'success' ? 'bg-mid' : 'bg-red-600'}`}>
                     <span className="flex-1">{toast.message}</span>
                     <button
                         aria-label="Dismiss"
-                        onClick={() => dispatch({ type: 'dismiss_toast' })}
+                        onClick={dismissToast}
                         className="opacity-60 hover:opacity-100 transition-opacity cursor-pointer text-lg leading-none"
                     >
                         &times;
@@ -213,7 +163,7 @@ function RecipeEditorPage() {
                 </div>
             )}
         </div>
-    )
+    );
 }
 
 export default RecipeEditorPage;
