@@ -202,4 +202,3 @@ All endpoints are prefixed `/api/v1/`.
 
 - TODO: Document the `/manage-ingredients` route once it is implemented.
 - TODO: Document any authentication/authorization layer if one is added in future.
-- TODO: Clarify whether `RecipeEditorPage` handles both create and edit, or only create.

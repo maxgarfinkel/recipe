@@ -9,7 +9,7 @@ function Header() {
     return (<>
                 <header className="w-full">
                     <div className="bg-dark ">
-                        <div className="md:container font-sans text-xl text-white bg-dark p-3">
+                        <div className="md:container mx-auto font-sans text-xl text-white bg-dark p-3">
                             <Link to={'/'}>:RecipeBook</Link>
                             <div className="float-right cursor-pointer" onClick={() => {
                                 setShowMenu(!showMenu)
@@ -25,7 +25,7 @@ function Header() {
                     </div>
 
                     <div className={"bg-dark overflow-clip transition-[max-height] ease-in-out duration-700 " + (showMenu ? "max-h-32" : "max-h-0") + " ..."}>
-                        <div className="md:container text-right text-white font-sans font-light">
+                        <div className="md:container mx-auto text-right text-white font-sans font-light">
                             <ul className="p-2">
                                 <li className="pb-2">
                                     <Link to={`/`}>Home</Link>

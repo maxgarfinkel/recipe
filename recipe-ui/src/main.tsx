@@ -11,7 +11,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
       <BrowserRouter>
           <Header />
-          <div className="md:container">
+          <div className="md:container mx-auto">
             <Routes>
                 <Route path='' element={<RecipeMenu />}/>
                 <Route path='/new-recipe' element={<RecipeEditorPage />}/>
