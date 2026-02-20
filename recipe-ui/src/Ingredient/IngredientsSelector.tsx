@@ -69,51 +69,65 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
 
     return (<>
         {ingredients.length < 0 && <>Loading...</>}
-            {showNewIngredientModal &&
-                <NewIngredientModal
-                    name={ingredientSearchTerm}
-                    units={units}
-                    quantity={quantity}
-                    closeModal={() => {setShowNewIngredientModal(false);}}
-                    ingredientCallback={addIngredient}
-                />}
+        {showNewIngredientModal &&
+            <NewIngredientModal
+                name={ingredientSearchTerm}
+                units={units}
+                quantity={quantity}
+                closeModal={() => {setShowNewIngredientModal(false);}}
+                ingredientCallback={addIngredient}
+            />}
         {ingredients.length > 0 &&
-            <>
-                <div className="border">
+            <div className="relative">
+                <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-mid focus-within:border-transparent">
                     {selectedIngredient === null &&
-                        <input placeholder="search for ingredients"
-                                autoFocus={autoFocusIngredients}
-                               value={ingredientSearchTerm}
-                               onKeyUp={onKeyPress}
-                               onChange={(e) => {
-                                   setIngredientSearchTerm(e.target.value);
-                                   setIngredientSearchResults(searchIngredients(e.target.value, ingredients));
+                        <input
+                            placeholder="search for ingredients"
+                            autoFocus={autoFocusIngredients}
+                            value={ingredientSearchTerm}
+                            onKeyUp={onKeyPress}
+                            onChange={(e) => {
+                                setIngredientSearchTerm(e.target.value);
+                                setIngredientSearchResults(searchIngredients(e.target.value, ingredients));
                             }}
-                               onFocus={() => setautoFocusIngredients(true)}
+                            onFocus={() => setautoFocusIngredients(true)}
+                            className="flex-1 min-w-0 focus:outline-none text-dark"
                         />
                     }
                     {selectedIngredient &&
-                        <span>{selectedIngredient.name}</span>
+                        <span className="flex-1 text-dark">{selectedIngredient.name}</span>
                     }
-                    <input placeholder="qty"
+                    <div className="flex items-center gap-2 border-l border-gray-200 pl-3">
+                        <input
+                            placeholder="qty"
                             ref={quantityFieldRef}
-                           value={quantity}
-                           onChange={(e) => setQuantity(e.target.value)}/>
-                    {selectedIngredient?.unit.abbreviation}
-                    <button onClick={() => {addIngredientQuantity()}}>Add</button>
+                            value={quantity}
+                            onChange={(e) => setQuantity(e.target.value)}
+                            className="w-14 focus:outline-none text-dark text-right"
+                        />
+                        {selectedIngredient?.unit.abbreviation &&
+                            <span className="text-gray-400 text-sm w-6">{selectedIngredient.unit.abbreviation}</span>
+                        }
+                    </div>
+                    <button
+                        onClick={() => addIngredientQuantity()}
+                        className="bg-mid text-white px-4 py-1.5 rounded-md text-sm font-medium hover:bg-dark transition-colors cursor-pointer"
+                    >
+                        Add
+                    </button>
                 </div>
                 {ingredientSearchResults.length > 0 &&
-                    <div className="absolute bg-white w-full z-50 p-1" >
+                    <div className="absolute bg-white rounded-lg shadow-lg border border-gray-100 w-full z-50 py-1 mt-1">
                         {ingredientSearchResults.map((ingredient, index) => (
-                            <div className={"cursor-pointer " +( index === selectedResult ? "font-bold" : "")}
+                            <div
+                                className={"px-4 py-2 cursor-pointer " + (index === selectedResult ? "bg-mid text-white" : "text-dark hover:bg-gray-50")}
                                 key={ingredient.id}
                                 onClick={() => setSelectedIngredient(ingredient)}
                             >{ingredient.name}</div>
                         ))}
-                     </div>
+                    </div>
                 }
-
-            </>
+            </div>
         }
         </>
     )
