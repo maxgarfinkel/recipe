@@ -16,34 +16,68 @@ import "./RecipeEditorPage.css";
 
 import '@mdxeditor/editor/style.css'
 import {useEffect, useRef, useState} from "react";
-import {useFetchIngredients, useFetchUnits} from "../apiHooks.ts";
+import {useFetchIngredients, useFetchUnits, useSaveRecipe} from "../apiHooks.ts";
 import IngredientsSelector from "../Ingredient/IngredientsSelector.tsx";
-import {IngredientQuantity} from "../Types.ts";
+import {IngredientQuantity, Recipe} from "../Types.ts";
 
-function RecipePage() {
+function RecipeEditorPage() {
 
     const {allIngredients, ingredientLoading, ingredientError, fetchIngredients} = useFetchIngredients();
     const {units, unitLoading, unitError, fetchUnits} = useFetchUnits();
+    const {savedRecipe, error: saveError, loading: saving, saveRecipe} = useSaveRecipe();
 
-    const [method, setMethod] = useState<string>("method");
+    const [method, setMethod] = useState<string>("");
     const [name, setName] = useState<string>("");
-    const [servings, setServings] = useState<string>();
+    const [servings, setServings] = useState<string>("");
     const [ingredients, setIngredients] = useState<IngredientQuantity[]>([]);
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    const ref = useRef<MDXEditorMethods>(null);
 
     useEffect(() => {
         fetchUnits();
-    },[fetchUnits]);
+    }, [fetchUnits]);
 
     useEffect(() => {
         fetchIngredients();
     }, [fetchIngredients]);
 
-    const addIngredient = (ingredient: IngredientQuantity) => {
-        console.log(ingredient);
-        setIngredients([...ingredients, ingredient])
-    }
+    useEffect(() => {
+        if (!savedRecipe) return;
+        setName('');
+        setServings('');
+        setIngredients([]);
+        setMethod('');
+        ref.current?.setMarkdown('');
+        setToast({ message: 'Recipe saved successfully!', type: 'success' });
+    }, [savedRecipe]);
 
-    const ref = useRef<MDXEditorMethods>(null)
+    useEffect(() => {
+        if (!saveError) return;
+        setToast({ message: `Could not save recipe: ${saveError}`, type: 'error' });
+    }, [saveError]);
+
+    useEffect(() => {
+        if (!toast) return;
+        const timer = setTimeout(() => setToast(null), 4000);
+        return () => clearTimeout(timer);
+    }, [toast]);
+
+    const addIngredient = (ingredient: IngredientQuantity) => {
+        setIngredients([...ingredients, ingredient]);
+    };
+
+    const handleSave = () => {
+        const recipe: Recipe = {
+            id: null,
+            name,
+            method,
+            servings: parseInt(servings) || 0,
+            ingredientQuantities: ingredients,
+        };
+        saveRecipe(recipe);
+    };
+
     return (
         <div className="py-8 px-4 md:px-0">
             <h1>New Recipe</h1>
@@ -115,10 +149,33 @@ function RecipePage() {
                             />
                         </div>
                     </div>
+
+                    <div>
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="bg-dark text-white px-8 py-3 rounded-lg font-medium hover:bg-mid transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                            {saving ? 'Saving...' : 'Save Recipe'}
+                        </button>
+                    </div>
                 </div>
             }
+
+            {toast && (
+                <div className={`fixed bottom-6 right-6 z-[200] flex items-center gap-4 px-5 py-4 rounded-xl shadow-xl text-white text-sm font-medium max-w-sm
+                    ${toast.type === 'success' ? 'bg-mid' : 'bg-red-600'}`}>
+                    <span className="flex-1">{toast.message}</span>
+                    <button
+                        onClick={() => setToast(null)}
+                        className="opacity-60 hover:opacity-100 transition-opacity cursor-pointer text-lg leading-none"
+                    >
+                        &times;
+                    </button>
+                </div>
+            )}
         </div>
     )
 }
 
-export default RecipePage;
+export default RecipeEditorPage;
