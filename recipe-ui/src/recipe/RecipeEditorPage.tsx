@@ -15,10 +15,54 @@ import {
 import "./RecipeEditorPage.css";
 
 import '@mdxeditor/editor/style.css'
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useReducer, useRef} from "react";
 import {useFetchIngredients, useFetchUnits, useSaveRecipe} from "../apiHooks.ts";
 import IngredientsSelector from "../Ingredient/IngredientsSelector.tsx";
 import {IngredientQuantity, Recipe} from "../Types.ts";
+
+type FormState = {
+    name: string;
+    servings: string;
+    method: string;
+    ingredients: IngredientQuantity[];
+    toast: { message: string; type: 'success' | 'error' } | null;
+};
+
+type FormAction =
+    | { type: 'set_name'; value: string }
+    | { type: 'set_servings'; value: string }
+    | { type: 'set_method'; value: string }
+    | { type: 'add_ingredient'; ingredient: IngredientQuantity }
+    | { type: 'saved' }
+    | { type: 'save_failed'; error: string }
+    | { type: 'dismiss_toast' };
+
+const initialState: FormState = {
+    name: '',
+    servings: '',
+    method: '',
+    ingredients: [],
+    toast: null,
+};
+
+function formReducer(state: FormState, action: FormAction): FormState {
+    switch (action.type) {
+        case 'set_name':
+            return { ...state, name: action.value };
+        case 'set_servings':
+            return { ...state, servings: action.value };
+        case 'set_method':
+            return { ...state, method: action.value };
+        case 'add_ingredient':
+            return { ...state, ingredients: [...state.ingredients, action.ingredient] };
+        case 'saved':
+            return { ...initialState, toast: { message: 'Recipe saved successfully!', type: 'success' } };
+        case 'save_failed':
+            return { ...state, toast: { message: `Could not save recipe: ${action.error}`, type: 'error' } };
+        case 'dismiss_toast':
+            return { ...state, toast: null };
+    }
+}
 
 function RecipeEditorPage() {
 
@@ -26,11 +70,8 @@ function RecipeEditorPage() {
     const {units, unitLoading, unitError, fetchUnits} = useFetchUnits();
     const {savedRecipe, error: saveError, loading: saving, saveRecipe} = useSaveRecipe();
 
-    const [method, setMethod] = useState<string>("");
-    const [name, setName] = useState<string>("");
-    const [servings, setServings] = useState<string>("");
-    const [ingredients, setIngredients] = useState<IngredientQuantity[]>([]);
-    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [state, dispatch] = useReducer(formReducer, initialState);
+    const {name, servings, method, ingredients, toast} = state;
 
     const ref = useRef<MDXEditorMethods>(null);
 
@@ -44,28 +85,20 @@ function RecipeEditorPage() {
 
     useEffect(() => {
         if (!savedRecipe) return;
-        setName('');
-        setServings('');
-        setIngredients([]);
-        setMethod('');
         ref.current?.setMarkdown('');
-        setToast({ message: 'Recipe saved successfully!', type: 'success' });
+        dispatch({ type: 'saved' });
     }, [savedRecipe]);
 
     useEffect(() => {
         if (!saveError) return;
-        setToast({ message: `Could not save recipe: ${saveError}`, type: 'error' });
+        dispatch({ type: 'save_failed', error: saveError });
     }, [saveError]);
 
     useEffect(() => {
         if (!toast) return;
-        const timer = setTimeout(() => setToast(null), 4000);
+        const timer = setTimeout(() => dispatch({ type: 'dismiss_toast' }), 4000);
         return () => clearTimeout(timer);
     }, [toast]);
-
-    const addIngredient = (ingredient: IngredientQuantity) => {
-        setIngredients([...ingredients, ingredient]);
-    };
 
     const handleSave = () => {
         const recipe: Recipe = {
@@ -92,7 +125,7 @@ function RecipeEditorPage() {
                             id="name"
                             autoFocus={true}
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            onChange={(e) => dispatch({ type: 'set_name', value: e.target.value })}
                             className="border border-gray-200 rounded-lg px-4 py-3 text-dark focus:outline-none focus:ring-2 focus:ring-mid focus:border-transparent"
                         />
                     </div>
@@ -103,7 +136,7 @@ function RecipeEditorPage() {
                             placeholder="4"
                             id="servings"
                             value={servings}
-                            onChange={(e) => setServings(e.target.value)}
+                            onChange={(e) => dispatch({ type: 'set_servings', value: e.target.value })}
                             className="border border-gray-200 rounded-lg px-4 py-3 text-dark focus:outline-none focus:ring-2 focus:ring-mid focus:border-transparent w-24"
                         />
                     </div>
@@ -119,7 +152,11 @@ function RecipeEditorPage() {
                                 ))}
                             </ul>
                         }
-                        <IngredientsSelector ingredients={allIngredients} units={units} addIngredient={addIngredient} />
+                        <IngredientsSelector
+                            ingredients={allIngredients}
+                            units={units}
+                            addIngredient={(iq) => dispatch({ type: 'add_ingredient', ingredient: iq })}
+                        />
                     </div>
 
                     <div>
@@ -128,7 +165,7 @@ function RecipeEditorPage() {
                             <MDXEditor
                                 ref={ref}
                                 markdown={method}
-                                onChange={(e) => setMethod(e)}
+                                onChange={(e) => dispatch({ type: 'set_method', value: e })}
                                 plugins={[
                                     toolbarPlugin({
                                         toolbarContents: () => (<>
@@ -163,12 +200,12 @@ function RecipeEditorPage() {
             }
 
             {toast && (
-                <div className={`fixed bottom-6 right-6 z-[200] flex items-center gap-4 px-5 py-4 rounded-xl shadow-xl text-white text-sm font-medium max-w-sm
+                <div className={`fixed bottom-6 right-6 z-200 flex items-center gap-4 px-5 py-4 rounded-xl shadow-xl text-white text-sm font-medium max-w-sm
                     ${toast.type === 'success' ? 'bg-mid' : 'bg-red-600'}`}>
                     <span className="flex-1">{toast.message}</span>
                     <button
                         aria-label="Dismiss"
-                        onClick={() => setToast(null)}
+                        onClick={() => dispatch({ type: 'dismiss_toast' })}
                         className="opacity-60 hover:opacity-100 transition-opacity cursor-pointer text-lg leading-none"
                     >
                         &times;
