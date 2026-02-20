@@ -81,8 +81,8 @@ function RecipeEditorPage() {
     return (
         <div className="py-8 px-4 md:px-0">
             <h1>New Recipe</h1>
-            {ingredientLoading || unitLoading && <p>Loading...</p>}
-            {ingredientError || unitError && <p>Error</p>}
+            {(ingredientLoading || unitLoading) && <p>Loading...</p>}
+            {(ingredientError || unitError) && <p>Error</p>}
             {allIngredients && allIngredients.length > 0 && units &&
                 <div className="flex flex-col gap-10">
                     <div className="flex flex-col gap-2 max-w-lg">
@@ -167,6 +167,7 @@ function RecipeEditorPage() {
                     ${toast.type === 'success' ? 'bg-mid' : 'bg-red-600'}`}>
                     <span className="flex-1">{toast.message}</span>
                     <button
+                        aria-label="Dismiss"
                         onClick={() => setToast(null)}
                         className="opacity-60 hover:opacity-100 transition-opacity cursor-pointer text-lg leading-none"
                     >
