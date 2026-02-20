@@ -1,7 +1,7 @@
 import {Link, useParams} from "react-router-dom";
 import "./RecipePage.css";
 import {useFetchRecipe} from "../apiHooks.ts";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import Markdown from "react-markdown";
 
 
@@ -10,14 +10,21 @@ function RecipePage() {
     const {id} = useParams();
 
     const {recipe, loading, error, fetchRecipe} = useFetchRecipe();
+    const [servings, setServings] = useState<number>(1);
 
     useEffect(() => {
         if(!id) {
             throw new Error('No recipe id provided');
         }
-        const recipeId = parseInt(id);
-        fetchRecipe(recipeId)
-    },[fetchRecipe, id])
+        fetchRecipe(parseInt(id));
+    },[fetchRecipe, id]);
+
+    useEffect(() => {
+        if (recipe) setServings(recipe.servings);
+    }, [recipe]);
+
+    const formatQuantity = (value: number): string =>
+        parseFloat(value.toFixed(2)).toString();
 
     return (
         <div className="py-8 px-4 md:px-0">
@@ -30,8 +37,22 @@ function RecipePage() {
                             &lsaquo; All recipes
                         </Link>
                         <h1>{recipe.name}</h1>
-                        <div className="text-sm font-medium uppercase tracking-widest text-mid">
-                            {recipe.servings} serving{recipe.servings > 1 ? 's' : ''}
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setServings(s => Math.max(1, s - 1))}
+                                className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-mid hover:bg-mid hover:text-white hover:border-mid transition-colors cursor-pointer"
+                            >
+                                −
+                            </button>
+                            <div className="text-sm font-medium uppercase tracking-widest text-mid">
+                                {servings} serving{servings !== 1 ? 's' : ''}
+                            </div>
+                            <button
+                                onClick={() => setServings(s => s + 1)}
+                                className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-mid hover:bg-mid hover:text-white hover:border-mid transition-colors cursor-pointer"
+                            >
+                                +
+                            </button>
                         </div>
                     </div>
 
@@ -40,7 +61,7 @@ function RecipePage() {
                         <ul>
                             {recipe.ingredientQuantities.map((iq) => (
                                 <li key={iq.id}>
-                                    {iq.quantity} {iq.ingredient.unit.abbreviation} {iq.ingredient.name}
+                                    {formatQuantity(iq.quantity * servings / recipe.servings)} {iq.ingredient.unit.abbreviation} {iq.ingredient.name}
                                 </li>
                             ))}
                         </ul>
