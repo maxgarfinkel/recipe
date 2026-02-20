@@ -57,13 +57,13 @@ function NewIngredientModal({...props}: NewIngredientModalProps) {
 
 
     return(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-96 max-w-[90%] max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+        <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md mx-4">
             {/* Modal Header */}
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Add a new ingredient</h2>
+            <div className="flex justify-between items-start mb-8">
+                <div className="text-xl font-bold text-dark">New Ingredient</div>
                 <button
-                    className="text-gray-500 hover:text-gray-700"
+                    className="text-gray-400 hover:text-dark transition-colors cursor-pointer leading-none"
                     onClick={closeModal}
                 >
                     <span className="text-2xl">&times;</span>
@@ -71,37 +71,54 @@ function NewIngredientModal({...props}: NewIngredientModalProps) {
             </div>
 
             {/* Modal Content */}
-            <div className="mb-6">
-                <input ref={inputRef} className="border border-gray-200" value={name} onChange={(e) => setName(e.target.value)} />
-                <input className="border border-gray-200" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-                <select
-                    value={selectedUnitId.toString()}
-                    onChange={(e) => setSelectedUnitId(e.target.value)}
-                    className="border border-gray-200"
-                >
-                    <option value="">Select unit</option>
-                    {units.units.map((unit) => (
-                        <option key={unit.id} value={unit.id.toString()}>
-                            {unit.name}
-                        </option>
-                    ))}
-                </select>
-
+            <div className="flex flex-col gap-5 mb-8">
+                <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold uppercase tracking-widest text-mid">Name</label>
+                    <input
+                        ref={inputRef}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="border border-gray-200 rounded-lg px-4 py-3 text-dark focus:outline-none focus:ring-2 focus:ring-mid focus:border-transparent"
+                    />
+                </div>
+                <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold uppercase tracking-widest text-mid">Quantity</label>
+                    <input
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        className="border border-gray-200 rounded-lg px-4 py-3 text-dark focus:outline-none focus:ring-2 focus:ring-mid focus:border-transparent"
+                    />
+                </div>
+                <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold uppercase tracking-widest text-mid">Unit</label>
+                    <select
+                        value={selectedUnitId.toString()}
+                        onChange={(e) => setSelectedUnitId(e.target.value)}
+                        className="border border-gray-200 rounded-lg px-4 py-3 text-dark focus:outline-none focus:ring-2 focus:ring-mid focus:border-transparent appearance-none bg-white"
+                    >
+                        <option value="">Select unit</option>
+                        {units.units.map((unit) => (
+                            <option key={unit.id} value={unit.id.toString()}>
+                                {unit.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-3">
                 <button
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                    className="px-5 py-2.5 border border-gray-200 text-dark rounded-md text-sm font-medium hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={closeModal}
                 >
                     Cancel
                 </button>
                 <button
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    className="px-5 py-2.5 bg-mid text-white rounded-md text-sm font-medium hover:bg-dark transition-colors cursor-pointer"
                     onClick={createNewIngredient}
                 >
-                    Confirm
+                    Add Ingredient
                 </button>
             </div>
         </div>
