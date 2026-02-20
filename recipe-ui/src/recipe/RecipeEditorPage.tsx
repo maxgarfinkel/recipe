@@ -4,7 +4,13 @@ import {
     listsPlugin,
     markdownShortcutPlugin,
     MDXEditor,
-    MDXEditorMethods
+    MDXEditorMethods,
+    toolbarPlugin,
+    UndoRedo,
+    Separator,
+    BoldItalicUnderlineToggles,
+    BlockTypeSelect,
+    ListsToggle,
 } from '@mdxeditor/editor'
 import "./RecipeEditorPage.css";
 
@@ -85,8 +91,28 @@ function RecipePage() {
                     <div>
                         <h2>Method</h2>
                         <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                            <MDXEditor ref={ref} markdown={method} onChange={(e) => setMethod(e)}
-                                       plugins={[headingsPlugin(), listsPlugin(), linkPlugin(), markdownShortcutPlugin()]} />
+                            <MDXEditor
+                                ref={ref}
+                                markdown={method}
+                                onChange={(e) => setMethod(e)}
+                                plugins={[
+                                    toolbarPlugin({
+                                        toolbarContents: () => (<>
+                                            <UndoRedo />
+                                            <Separator />
+                                            <BlockTypeSelect />
+                                            <Separator />
+                                            <BoldItalicUnderlineToggles options={['Bold', 'Italic']} />
+                                            <Separator />
+                                            <ListsToggle options={['bullet', 'number']} />
+                                        </>)
+                                    }),
+                                    headingsPlugin(),
+                                    listsPlugin(),
+                                    linkPlugin(),
+                                    markdownShortcutPlugin(),
+                                ]}
+                            />
                         </div>
                     </div>
                 </div>
