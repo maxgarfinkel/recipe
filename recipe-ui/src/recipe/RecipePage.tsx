@@ -1,9 +1,10 @@
-import {Link, useParams} from "react-router-dom";
+import {Link, useNavigate, useParams} from "react-router-dom";
 import "./RecipePage.css";
-import {useFetchRecipe} from "../apiHooks.ts";
-import {useEffect, useReducer} from "react";
+import {useDeleteRecipe, useFetchRecipe} from "../apiHooks.ts";
+import {useEffect, useReducer, useState} from "react";
 import Markdown from "react-markdown";
 import {useToast} from "../context/ToastContext.tsx";
+import DeleteRecipeModal from "./DeleteRecipeModal.tsx";
 
 
 type ServingsAction =
@@ -22,10 +23,13 @@ function servingsReducer(state: number, action: ServingsAction): number {
 function RecipePage() {
 
     const {id} = useParams();
+    const navigate = useNavigate();
 
     const {recipe, loading, error, fetchRecipe} = useFetchRecipe();
     const [servings, dispatch] = useReducer(servingsReducer, 1);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const {showToast} = useToast();
+    const {deleted, error: deleteError, loading: deleting, deleteRecipe} = useDeleteRecipe();
 
     useEffect(() => {
         if(!id) {
@@ -43,6 +47,17 @@ function RecipePage() {
         showToast(`Could not load recipe: ${error}`, 'error');
     }, [error, showToast]);
 
+    useEffect(() => {
+        if (!deleted) return;
+        showToast('Recipe deleted successfully!', 'success');
+        navigate('/');
+    }, [deleted, navigate, showToast]);
+
+    useEffect(() => {
+        if (!deleteError) return;
+        showToast(`Could not delete recipe: ${deleteError}`, 'error');
+    }, [deleteError, showToast]);
+
     const formatQuantity = (value: number): string =>
         parseFloat(value.toFixed(2)).toString();
 
@@ -56,9 +71,17 @@ function RecipePage() {
                             <Link to={'/'} className="text-xs font-semibold uppercase tracking-widest text-mid hover:text-dark transition-colors">
                                 &lsaquo; All recipes
                             </Link>
-                            <Link to={`/recipe/${id}/edit`} className="text-xs font-semibold uppercase tracking-widest text-mid hover:text-dark transition-colors">
-                                Edit recipe &rarr;
-                            </Link>
+                            <div className="flex items-center gap-4">
+                                <Link to={`/recipe/${id}/edit`} className="text-xs font-semibold uppercase tracking-widest text-mid hover:text-dark transition-colors">
+                                    Edit recipe &rarr;
+                                </Link>
+                                <button
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="text-xs font-semibold uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors cursor-pointer"
+                                >
+                                    Delete
+                                </button>
+                            </div>
                         </div>
                         <h1>{recipe.name}</h1>
                         <div className="flex items-center gap-3">
@@ -97,6 +120,14 @@ function RecipePage() {
                     </div>
                 </div>
             }
+            {recipe && showDeleteModal && (
+                <DeleteRecipeModal
+                    recipeName={recipe.name}
+                    onConfirm={() => { setShowDeleteModal(false); deleteRecipe(parseInt(id!)); }}
+                    onCancel={() => setShowDeleteModal(false)}
+                    deleting={deleting}
+                />
+            )}
         </div>
     )
 }

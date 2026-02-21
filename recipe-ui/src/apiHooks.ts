@@ -69,6 +69,16 @@ export function useFetchIngredients() {
     return { allIngredients: data ?? [], ingredientError: error, ingredientLoading: loading, fetchIngredients };
 }
 
+export function useDeleteRecipe() {
+    const { data: deleted, error, loading, execute } = useAsync<boolean>();
+
+    const deleteRecipe = useCallback((id: number) => {
+        return execute(() => api.delete(`recipe/${id}`).then(() => true));
+    }, [execute]);
+
+    return { deleted, error, loading, deleteRecipe };
+}
+
 export function useSaveIngredient() {
     const { data: savedIngredient, error: saveIngredientError, loading: saveIngredientLoading, execute } = useAsync<Ingredient>();
 

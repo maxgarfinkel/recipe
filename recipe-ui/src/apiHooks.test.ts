@@ -1,7 +1,7 @@
 // apiHooks.test.ts
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {useFetchIngredients, useFetchRecipe, useFetchRecipes, useFetchUnits, useSaveRecipe, useUpdateRecipe} from './apiHooks';
+import {useDeleteRecipe, useFetchIngredients, useFetchRecipe, useFetchRecipes, useFetchUnits, useSaveRecipe, useUpdateRecipe} from './apiHooks';
 import {Ingredient, Recipe} from './Types';
 import {deferred} from "./testUtils/deferred.ts";
 import {Unit} from "./Unit/Unit.ts";
@@ -12,6 +12,7 @@ vi.mock('./api', () => ({
         get: vi.fn(),
         post: vi.fn(),
         put: vi.fn(),
+        delete: vi.fn(),
     }
 }));
 
@@ -558,4 +559,72 @@ describe('useFetchIngredients', () => {
         expect(result.current.allIngredients).toBe(mockIngredients);
         expect(result.current.ingredientLoading).toBeFalsy();
     })
+})
+
+describe('useDeleteRecipe', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('should initialize with default values', () => {
+        const { result } = renderHook(() => useDeleteRecipe());
+
+        expect(result.current.deleted).toBeUndefined();
+        expect(result.current.error).toBeNull();
+        expect(result.current.loading).toBeFalsy();
+        expect(typeof result.current.deleteRecipe).toBe('function');
+    });
+
+    it('should successfully delete a recipe', async () => {
+        mockedApi.delete.mockResolvedValueOnce({});
+
+        const { result } = renderHook(() => useDeleteRecipe());
+
+        await act(async () => {
+            await result.current.deleteRecipe(42);
+        });
+
+        expect(api.delete).toHaveBeenCalledWith('recipe/42');
+        expect(result.current.deleted).toBe(true);
+        expect(result.current.error).toBeNull();
+        expect(result.current.loading).toBeFalsy();
+    });
+
+    it('should handle delete failure', async () => {
+        const errorMessage = 'Failed to delete recipe';
+        mockedApi.delete.mockRejectedValueOnce(new Error(errorMessage));
+
+        const { result } = renderHook(() => useDeleteRecipe());
+
+        await act(async () => {
+            await result.current.deleteRecipe(42);
+        });
+
+        expect(result.current.deleted).toBeUndefined();
+        expect(result.current.error).toBe(errorMessage);
+        expect(result.current.loading).toBeFalsy();
+    });
+
+    it('should set loading state while deleting', async () => {
+        const deferredDelete = deferred<unknown>();
+
+        mockedApi.delete.mockImplementationOnce(() => deferredDelete.promise);
+
+        const { result } = renderHook(() => useDeleteRecipe());
+
+        let promise: Promise<void>;
+
+        await act(async () => {
+            promise = result.current.deleteRecipe(42);
+        });
+
+        expect(result.current.loading).toBeTruthy();
+
+        await act(async () => {
+            deferredDelete.resolve({});
+            await promise!;
+        });
+
+        expect(result.current.loading).toBeFalsy();
+    });
 })
