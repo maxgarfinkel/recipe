@@ -193,11 +193,24 @@ describe('RecipeMenu', () => {
             render(<RecipeMenu />, { wrapper: Wrapper });
 
             const recipeLinks = screen.getAllByRole('link')
-                .filter(el => el.getAttribute('href')?.startsWith('/recipe/'));
+                .filter(el => {
+                    const href = el.getAttribute('href');
+                    return href?.startsWith('/recipe/') && !href?.endsWith('/edit');
+                });
 
             expect(recipeLinks[0]).toHaveTextContent('Apple Crumble');
             expect(recipeLinks[1]).toHaveTextContent('Spaghetti Bolognese');
             expect(recipeLinks[2]).toHaveTextContent('Zucchini Soup');
+        });
+
+        it('each recipe row has an edit link pointing to /recipe/{id}/edit', () => {
+            setupHooks({ recipes: [appleCrumble, spaghettiBoloognese] });
+            render(<RecipeMenu />, { wrapper: Wrapper });
+
+            const editLinks = screen.getAllByRole('link', { name: /^edit$/i });
+            expect(editLinks).toHaveLength(2);
+            expect(editLinks[0]).toHaveAttribute('href', '/recipe/1/edit');
+            expect(editLinks[1]).toHaveAttribute('href', '/recipe/2/edit');
         });
     });
 

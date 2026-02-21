@@ -1,14 +1,16 @@
 import "./RecipeEditorPage.css";
 import { useEffect, useReducer, useRef } from "react";
 import { MDXEditorMethods } from '@mdxeditor/editor';
-import { useFetchIngredients, useFetchUnits, useSaveRecipe } from "../apiHooks.ts";
+import { useFetchIngredients, useFetchRecipe, useFetchUnits, useSaveRecipe, useUpdateRecipe } from "../apiHooks.ts";
 import IngredientsSelector from "../Ingredient/IngredientsSelector.tsx";
 import { IngredientQuantity, Recipe } from "../Types.ts";
 import MethodEditor from "./MethodEditor.tsx";
 import IngredientList from "./IngredientList.tsx";
 import { useToast } from "../context/ToastContext.tsx";
+import { useParams } from "react-router-dom";
 
 type FormState = {
+    id: bigint | null;
     name: string;
     servings: string;
     method: string;
@@ -20,9 +22,11 @@ type FormAction =
     | { type: 'set_servings'; value: string }
     | { type: 'set_method'; value: string }
     | { type: 'add_ingredient'; ingredient: IngredientQuantity }
-    | { type: 'saved' };
+    | { type: 'saved' }
+    | { type: 'load_recipe'; recipe: Recipe };
 
 const initialState: FormState = {
+    id: null,
     name: '',
     servings: '',
     method: '',
@@ -41,14 +45,26 @@ function formReducer(state: FormState, action: FormAction): FormState {
             return { ...state, ingredients: [...state.ingredients, action.ingredient] };
         case 'saved':
             return { ...initialState };
+        case 'load_recipe':
+            return {
+                id: action.recipe.id,
+                name: action.recipe.name,
+                servings: String(action.recipe.servings),
+                method: action.recipe.method,
+                ingredients: action.recipe.ingredientQuantities,
+            };
     }
 }
 
 function RecipeEditorPage() {
 
+    const { id } = useParams();
+
     const { allIngredients, ingredientLoading, ingredientError, fetchIngredients } = useFetchIngredients();
     const { units, unitLoading, unitError, fetchUnits } = useFetchUnits();
     const { savedRecipe, error: saveError, loading: saving, saveRecipe } = useSaveRecipe();
+    const { recipe, loading, fetchRecipe } = useFetchRecipe();
+    const { updatedRecipe, error: updateError, loading: updating, updateRecipe } = useUpdateRecipe();
 
     const [state, dispatch] = useReducer(formReducer, initialState);
     const { name, servings, method, ingredients } = state;
@@ -64,6 +80,16 @@ function RecipeEditorPage() {
     useEffect(() => {
         fetchIngredients();
     }, [fetchIngredients]);
+
+    useEffect(() => {
+        if (id) fetchRecipe(parseInt(id));
+    }, [fetchRecipe, id]);
+
+    useEffect(() => {
+        if (!recipe) return;
+        dispatch({ type: 'load_recipe', recipe });
+        ref.current?.setMarkdown(recipe.method);
+    }, [recipe]);
 
     useEffect(() => {
         if (!ingredientError) return;
@@ -87,21 +113,37 @@ function RecipeEditorPage() {
         showToast(`Could not save recipe: ${saveError}`, 'error');
     }, [saveError, showToast]);
 
+    useEffect(() => {
+        if (!updatedRecipe) return;
+        showToast('Recipe updated successfully!', 'success');
+    }, [updatedRecipe, showToast]);
+
+    useEffect(() => {
+        if (!updateError) return;
+        showToast(`Could not update recipe: ${updateError}`, 'error');
+    }, [updateError, showToast]);
+
     const handleSave = () => {
         const recipe: Recipe = {
-            id: null,
+            id: state.id,
             name,
             method,
             servings: parseInt(servings) || 0,
             ingredientQuantities: ingredients,
         };
-        saveRecipe(recipe);
+        if (state.id !== null) {
+            updateRecipe(recipe);
+        } else {
+            saveRecipe(recipe);
+        }
     };
+
+    const isEditing = !!id;
 
     return (
         <div className="py-8 px-4 md:px-0">
-            <h1>New Recipe</h1>
-            {(ingredientLoading || unitLoading) && <p>Loading...</p>}
+            <h1>{isEditing ? 'Edit Recipe' : 'New Recipe'}</h1>
+            {(ingredientLoading || unitLoading || loading) && <p>Loading...</p>}
             {allIngredients && allIngredients.length > 0 && units &&
                 <div className="flex flex-col gap-10">
                     <div className="flex flex-col gap-2 max-w-lg">
@@ -149,10 +191,10 @@ function RecipeEditorPage() {
                     <div>
                         <button
                             onClick={handleSave}
-                            disabled={saving}
+                            disabled={saving || updating}
                             className="bg-dark text-white px-8 py-3 rounded-lg font-medium hover:bg-mid transition-colors cursor-pointer disabled:opacity-50"
                         >
-                            {saving ? 'Saving...' : 'Save Recipe'}
+                            {saving || updating ? 'Saving...' : isEditing ? 'Update Recipe' : 'Save Recipe'}
                         </button>
                     </div>
                 </div>

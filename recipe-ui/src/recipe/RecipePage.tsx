@@ -52,9 +52,14 @@ function RecipePage() {
             {recipe &&
                 <div className="flex flex-col gap-10">
                     <div>
-                        <Link to={'/'} className="block mb-2 text-xs font-semibold uppercase tracking-widest text-mid hover:text-dark transition-colors">
-                            &lsaquo; All recipes
-                        </Link>
+                        <div className="flex items-center justify-between mb-2">
+                            <Link to={'/'} className="text-xs font-semibold uppercase tracking-widest text-mid hover:text-dark transition-colors">
+                                &lsaquo; All recipes
+                            </Link>
+                            <Link to={`/recipe/${id}/edit`} className="text-xs font-semibold uppercase tracking-widest text-mid hover:text-dark transition-colors">
+                                Edit recipe &rarr;
+                            </Link>
+                        </div>
                         <h1>{recipe.name}</h1>
                         <div className="flex items-center gap-3">
                             <button

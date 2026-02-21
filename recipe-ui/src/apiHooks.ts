@@ -49,6 +49,16 @@ export function useSaveRecipe() {
     return { savedRecipe, error, loading, saveRecipe };
 }
 
+export function useUpdateRecipe() {
+    const { data: updatedRecipe, error, loading, execute } = useAsync<Recipe>();
+
+    const updateRecipe = useCallback((recipe: Recipe) => {
+        return execute(() => api.put<Recipe>(`recipe/${recipe.id}`, recipe).then(r => r.data));
+    }, [execute]);
+
+    return { updatedRecipe, error, loading, updateRecipe };
+}
+
 export function useFetchIngredients() {
     const { data, error, loading, execute } = useAsync<Ingredient[]>();
 

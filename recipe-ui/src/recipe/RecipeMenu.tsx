@@ -41,12 +41,11 @@ function RecipeMenu() {
             {sorted.length > 0 && (
                 <div className="divide-y divide-gray-100">
                     {sorted.map(recipe => (
-                        <Link
+                        <div
                             key={String(recipe.id)}
-                            to={`/recipe/${recipe.id}`}
                             className="flex items-center justify-between py-4 px-3 -mx-3 rounded-lg group hover:bg-gray-50 transition-colors"
                         >
-                            <div className="flex flex-col gap-0.5">
+                            <Link to={`/recipe/${recipe.id}`} className="flex flex-col gap-0.5">
                                 <span className="font-medium text-dark group-hover:text-mid transition-colors">
                                     {recipe.name}
                                 </span>
@@ -56,11 +55,14 @@ function RecipeMenu() {
                                         <> · {recipe.ingredientQuantities.length} ingredient{recipe.ingredientQuantities.length !== 1 ? 's' : ''}</>
                                     )}
                                 </span>
-                            </div>
-                            <span className="text-gray-300 group-hover:text-mid transition-colors text-xl leading-none">
-                                ›
-                            </span>
-                        </Link>
+                            </Link>
+                            <Link
+                                to={`/recipe/${recipe.id}/edit`}
+                                className="text-xs font-semibold uppercase tracking-widest text-mid hover:text-dark transition-colors"
+                            >
+                                Edit
+                            </Link>
+                        </div>
                     ))}
                 </div>
             )}

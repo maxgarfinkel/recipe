@@ -1,7 +1,7 @@
 // apiHooks.test.ts
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {useFetchIngredients, useFetchRecipe, useFetchRecipes, useFetchUnits, useSaveRecipe} from './apiHooks';
+import {useFetchIngredients, useFetchRecipe, useFetchRecipes, useFetchUnits, useSaveRecipe, useUpdateRecipe} from './apiHooks';
 import {Ingredient, Recipe} from './Types';
 import {deferred} from "./testUtils/deferred.ts";
 import {Unit} from "./Unit/Unit.ts";
@@ -11,6 +11,7 @@ vi.mock('./api', () => ({
     default: {
         get: vi.fn(),
         post: vi.fn(),
+        put: vi.fn(),
     }
 }));
 
@@ -387,6 +388,88 @@ describe('useFetchUnits', () => {
         expect(result.current.unitLoading).toBeFalsy();
     })
 })
+
+describe('useUpdateRecipe', () => {
+    const mockRecipe: Recipe = {
+        id: BigInt(1),
+        name: "Test Recipe",
+        method: "Test Method",
+        servings: 4,
+        ingredientQuantities: []
+    };
+
+    const mockUpdatedRecipe: Recipe = {
+        ...mockRecipe,
+        name: "Updated Recipe",
+    };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('should initialize with default values', () => {
+        const { result } = renderHook(() => useUpdateRecipe());
+
+        expect(result.current.updatedRecipe).toBeUndefined();
+        expect(result.current.error).toBeNull();
+        expect(result.current.loading).toBeFalsy();
+        expect(typeof result.current.updateRecipe).toBe('function');
+    });
+
+    it('should successfully update a recipe', async () => {
+        mockedApi.put.mockResolvedValueOnce({ data: mockUpdatedRecipe });
+
+        const { result } = renderHook(() => useUpdateRecipe());
+
+        await act(async () => {
+            await result.current.updateRecipe(mockRecipe);
+        });
+
+        expect(api.put).toHaveBeenCalledWith(`recipe/${mockRecipe.id}`, mockRecipe);
+        expect(result.current.updatedRecipe).toEqual(mockUpdatedRecipe);
+        expect(result.current.error).toBeNull();
+        expect(result.current.loading).toBeFalsy();
+    });
+
+    it('should handle update failure', async () => {
+        const errorMessage = 'Failed to update recipe';
+        mockedApi.put.mockRejectedValueOnce(new Error(errorMessage));
+
+        const { result } = renderHook(() => useUpdateRecipe());
+
+        await act(async () => {
+            await result.current.updateRecipe(mockRecipe);
+        });
+
+        expect(api.put).toHaveBeenCalledWith(`recipe/${mockRecipe.id}`, mockRecipe);
+        expect(result.current.updatedRecipe).toBeUndefined();
+        expect(result.current.error).toBe(errorMessage);
+        expect(result.current.loading).toBeFalsy();
+    });
+
+    it('should set loading state while updating', async () => {
+        const deferredPut = deferred<{ data: Recipe }>();
+
+        mockedApi.put.mockImplementationOnce(() => deferredPut.promise);
+
+        const { result } = renderHook(() => useUpdateRecipe());
+
+        let promise: Promise<void>;
+
+        await act(async () => {
+            promise = result.current.updateRecipe(mockRecipe);
+        });
+
+        expect(result.current.loading).toBeTruthy();
+
+        await act(async () => {
+            deferredPut.resolve({ data: mockUpdatedRecipe });
+            await promise!;
+        });
+
+        expect(result.current.loading).toBeFalsy();
+    });
+});
 
 describe('useFetchIngredients', () => {
     const mockIngredients: Ingredient[] =

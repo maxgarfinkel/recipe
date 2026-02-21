@@ -17,6 +17,7 @@ createRoot(document.getElementById('root')!).render(
                 <Routes>
                     <Route path='' element={<RecipeMenu />}/>
                     <Route path='/new-recipe' element={<RecipeEditorPage />}/>
+                    <Route path='/recipe/:id/edit' element={<RecipeEditorPage />}/>
                     <Route path='/manage-ingredients' element={<div>manage ingredients</div>}/>
                     <Route path='/recipe/:id' element={<RecipePage />}/>
                 </Routes>

@@ -1,5 +1,7 @@
 import { render, screen, fireEvent, act, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { ReactNode } from 'react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Recipe, Ingredient } from '../Types';
 import { Unit } from '../Unit/Unit';
 import { Units } from '../Unit/Units';
@@ -60,6 +62,8 @@ vi.mock('../apiHooks', () => ({
     useFetchIngredients: vi.fn(),
     useFetchUnits: vi.fn(),
     useSaveRecipe: vi.fn(),
+    useUpdateRecipe: vi.fn(),
+    useFetchRecipe: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -67,8 +71,32 @@ vi.mock('../apiHooks', () => ({
 // ---------------------------------------------------------------------------
 
 import RecipeEditorPage from './RecipeEditorPage';
-import { useFetchIngredients, useFetchUnits, useSaveRecipe } from '../apiHooks';
+import { useFetchIngredients, useFetchUnits, useSaveRecipe, useUpdateRecipe, useFetchRecipe } from '../apiHooks';
 import { ToastProvider } from '../context/ToastContext';
+
+// ---------------------------------------------------------------------------
+// Wrappers
+// ---------------------------------------------------------------------------
+
+function CreateWrapper({ children }: { children: ReactNode }) {
+    return (
+        <MemoryRouter initialEntries={['/new-recipe']}>
+            <ToastProvider>{children}</ToastProvider>
+        </MemoryRouter>
+    );
+}
+
+function EditWrapper({ children }: { children: ReactNode }) {
+    return (
+        <ToastProvider>
+            <MemoryRouter initialEntries={['/recipe/1/edit']}>
+                <Routes>
+                    <Route path="/recipe/:id/edit" element={<>{children}</>} />
+                </Routes>
+            </MemoryRouter>
+        </ToastProvider>
+    );
+}
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -82,12 +110,26 @@ const mockIngredient: Ingredient = {
 };
 const mockUnits = new Units([mockUnit]);
 const mockSaveRecipe = vi.fn();
+const mockUpdateRecipe = vi.fn();
 const mockSavedRecipe: Recipe = {
     id: BigInt(1),
     name: 'Saved Recipe',
     method: 'Boil water',
     servings: 4,
     ingredientQuantities: [],
+};
+const mockFetchedRecipe: Recipe = {
+    id: BigInt(1),
+    name: 'Existing Recipe',
+    method: 'Existing method',
+    servings: 3,
+    ingredientQuantities: [
+        {
+            id: BigInt(10),
+            quantity: 100,
+            ingredient: { id: BigInt(1), name: 'flour', unit: { id: BigInt(1), name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 } },
+        },
+    ],
 };
 
 // ---------------------------------------------------------------------------
@@ -104,6 +146,12 @@ interface HookOptions {
     savedRecipe?: Recipe | undefined;
     saveError?: string | null;
     saving?: boolean;
+    fetchedRecipe?: Recipe | null;
+    fetchLoading?: boolean;
+    fetchError?: string | null;
+    updatedRecipe?: Recipe | undefined;
+    updateError?: string | null;
+    updating?: boolean;
 }
 
 function setupHooks({
@@ -116,6 +164,12 @@ function setupHooks({
     savedRecipe = undefined,
     saveError = null,
     saving = false,
+    fetchedRecipe = null,
+    fetchLoading = false,
+    fetchError = null,
+    updatedRecipe = undefined,
+    updateError = null,
+    updating = false,
 }: HookOptions = {}) {
     vi.mocked(useFetchIngredients).mockReturnValue({
         allIngredients: ingredients,
@@ -134,6 +188,18 @@ function setupHooks({
         error: saveError,
         loading: saving,
         saveRecipe: mockSaveRecipe,
+    });
+    vi.mocked(useFetchRecipe).mockReturnValue({
+        recipe: fetchedRecipe,
+        loading: fetchLoading,
+        error: fetchError,
+        fetchRecipe: vi.fn(),
+    });
+    vi.mocked(useUpdateRecipe).mockReturnValue({
+        updatedRecipe,
+        error: updateError,
+        loading: updating,
+        updateRecipe: mockUpdateRecipe,
     });
 }
 
@@ -157,25 +223,25 @@ describe('RecipeEditorPage', () => {
     describe('loading and error states', () => {
         it('shows a loading indicator while ingredients are loading', () => {
             setupHooks({ ingredientLoading: true, ingredients: [] });
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             expect(screen.getByText('Loading...')).toBeInTheDocument();
         });
 
         it('shows a loading indicator while units are loading', () => {
             setupHooks({ unitLoading: true, ingredients: [] });
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             expect(screen.getByText('Loading...')).toBeInTheDocument();
         });
 
         it('shows an error toast when the ingredient fetch fails', () => {
             setupHooks({ ingredientError: 'Network error', ingredients: [] });
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             expect(screen.getByText('Could not load ingredients: Network error')).toBeInTheDocument();
         });
 
         it('does not render the form before data has loaded', () => {
             setupHooks({ ingredients: [] });
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             expect(screen.queryByLabelText(/recipe name/i)).not.toBeInTheDocument();
         });
     });
@@ -184,19 +250,24 @@ describe('RecipeEditorPage', () => {
 
     describe('form rendering', () => {
         it('renders the recipe name and servings inputs once data has loaded', () => {
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             expect(screen.getByLabelText(/recipe name/i)).toBeInTheDocument();
             expect(screen.getByLabelText(/servings/i)).toBeInTheDocument();
         });
 
         it('renders the method editor', () => {
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             expect(screen.getByTestId('method-editor')).toBeInTheDocument();
         });
 
         it('renders the save button', () => {
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             expect(screen.getByRole('button', { name: /save recipe/i })).toBeInTheDocument();
+        });
+
+        it('shows "New Recipe" heading in create mode', () => {
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
+            expect(screen.getByRole('heading', { name: /new recipe/i })).toBeInTheDocument();
         });
     });
 
@@ -204,21 +275,21 @@ describe('RecipeEditorPage', () => {
 
     describe('form interaction', () => {
         it('reflects typed recipe name in the input', () => {
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             const input = screen.getByLabelText(/recipe name/i);
             fireEvent.change(input, { target: { value: 'Pasta Bake' } });
             expect(input).toHaveValue('Pasta Bake');
         });
 
         it('reflects typed servings value in the input', () => {
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             const input = screen.getByLabelText(/servings/i);
             fireEvent.change(input, { target: { value: '6' } });
             expect(input).toHaveValue('6');
         });
 
         it('shows an added ingredient in the list', () => {
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             fireEvent.click(screen.getByTestId('add-ingredient-btn'));
             expect(screen.getByText(/flour/i)).toBeInTheDocument();
         });
@@ -228,7 +299,7 @@ describe('RecipeEditorPage', () => {
 
     describe('saving', () => {
         it('calls saveRecipe with the correct recipe payload', () => {
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             fireEvent.change(screen.getByLabelText(/recipe name/i), { target: { value: 'Pasta' } });
             fireEvent.change(screen.getByLabelText(/servings/i), { target: { value: '2' } });
             fireEvent.change(screen.getByTestId('method-editor'), { target: { value: 'Boil the pasta' } });
@@ -244,7 +315,7 @@ describe('RecipeEditorPage', () => {
         });
 
         it('includes ingredients added via the selector in the save payload', () => {
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             fireEvent.click(screen.getByTestId('add-ingredient-btn'));
             fireEvent.click(screen.getByRole('button', { name: /save recipe/i }));
 
@@ -256,7 +327,7 @@ describe('RecipeEditorPage', () => {
         });
 
         it('defaults servings to 0 when the field is left empty', () => {
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             fireEvent.click(screen.getByRole('button', { name: /save recipe/i }));
             expect(mockSaveRecipe).toHaveBeenCalledWith(
                 expect.objectContaining({ servings: 0 })
@@ -265,7 +336,7 @@ describe('RecipeEditorPage', () => {
 
         it('disables the save button and shows "Saving…" while in flight', () => {
             setupHooks({ saving: true });
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             const button = screen.getByRole('button', { name: /saving/i });
             expect(button).toBeDisabled();
         });
@@ -276,13 +347,13 @@ describe('RecipeEditorPage', () => {
     describe('success toast', () => {
         it('shows a success toast when the recipe is saved', () => {
             setupHooks({ savedRecipe: mockSavedRecipe });
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             expect(screen.getByText('Recipe saved successfully!')).toBeInTheDocument();
         });
 
         it('resets all form fields after a successful save', async () => {
             setupHooks();
-            const { rerender } = render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            const { rerender } = render(<RecipeEditorPage />, { wrapper: CreateWrapper });
 
             fireEvent.change(screen.getByLabelText(/recipe name/i), { target: { value: 'My Recipe' } });
             fireEvent.change(screen.getByLabelText(/servings/i), { target: { value: '4' } });
@@ -301,7 +372,7 @@ describe('RecipeEditorPage', () => {
 
         it('dismisses the toast when the close button is clicked', () => {
             setupHooks({ savedRecipe: mockSavedRecipe });
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
             expect(screen.queryByText('Recipe saved successfully!')).not.toBeInTheDocument();
         });
@@ -309,7 +380,7 @@ describe('RecipeEditorPage', () => {
         it('auto-dismisses the success toast after 4 seconds', async () => {
             vi.useFakeTimers();
             setupHooks({ savedRecipe: mockSavedRecipe });
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
 
             expect(screen.getByText('Recipe saved successfully!')).toBeInTheDocument();
 
@@ -327,13 +398,13 @@ describe('RecipeEditorPage', () => {
     describe('error toast', () => {
         it('shows an error toast with the failure message', () => {
             setupHooks({ saveError: 'Network Error' });
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             expect(screen.getByText('Could not save recipe: Network Error')).toBeInTheDocument();
         });
 
         it('preserves form data when the save fails', async () => {
             setupHooks();
-            const { rerender } = render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            const { rerender } = render(<RecipeEditorPage />, { wrapper: CreateWrapper });
 
             fireEvent.change(screen.getByLabelText(/recipe name/i), { target: { value: 'Cheesecake' } });
 
@@ -349,7 +420,7 @@ describe('RecipeEditorPage', () => {
         it('auto-dismisses the error toast after 4 seconds', async () => {
             vi.useFakeTimers();
             setupHooks({ saveError: 'Network Error' });
-            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            render(<RecipeEditorPage />, { wrapper: CreateWrapper });
 
             expect(screen.getByText(/Could not save recipe/)).toBeInTheDocument();
 
@@ -359,6 +430,98 @@ describe('RecipeEditorPage', () => {
 
             expect(screen.queryByText(/Could not save recipe/)).not.toBeInTheDocument();
             vi.useRealTimers();
+        });
+    });
+
+    // --- Edit mode ------------------------------------------------------------
+
+    describe('edit mode', () => {
+        it('shows "Edit Recipe" heading in edit mode', () => {
+            render(<RecipeEditorPage />, { wrapper: EditWrapper });
+            expect(screen.getByRole('heading', { name: /edit recipe/i })).toBeInTheDocument();
+        });
+
+        it('shows a loading indicator while fetching the recipe', () => {
+            setupHooks({ fetchLoading: true, ingredients: [] });
+            render(<RecipeEditorPage />, { wrapper: EditWrapper });
+            expect(screen.getByText('Loading...')).toBeInTheDocument();
+        });
+
+        it('pre-populates name and servings from the fetched recipe', () => {
+            setupHooks({ fetchedRecipe: mockFetchedRecipe });
+            render(<RecipeEditorPage />, { wrapper: EditWrapper });
+            expect(screen.getByLabelText(/recipe name/i)).toHaveValue('Existing Recipe');
+            expect(screen.getByLabelText(/servings/i)).toHaveValue('3');
+        });
+
+        it('pre-populates the method from the fetched recipe', () => {
+            setupHooks({ fetchedRecipe: mockFetchedRecipe });
+            render(<RecipeEditorPage />, { wrapper: EditWrapper });
+            expect(screen.getByTestId('method-editor')).toHaveValue('Existing method');
+        });
+
+        it('pre-populates the ingredient list from the fetched recipe', () => {
+            setupHooks({ fetchedRecipe: mockFetchedRecipe });
+            render(<RecipeEditorPage />, { wrapper: EditWrapper });
+            expect(screen.getByText(/flour/i)).toBeInTheDocument();
+        });
+
+        it('renders "Update Recipe" button in edit mode', () => {
+            render(<RecipeEditorPage />, { wrapper: EditWrapper });
+            expect(screen.getByRole('button', { name: /update recipe/i })).toBeInTheDocument();
+        });
+
+        it('calls updateRecipe (not saveRecipe) when save is clicked in edit mode', () => {
+            setupHooks({ fetchedRecipe: mockFetchedRecipe });
+            render(<RecipeEditorPage />, { wrapper: EditWrapper });
+            fireEvent.click(screen.getByRole('button', { name: /update recipe/i }));
+            expect(mockUpdateRecipe).toHaveBeenCalledOnce();
+            expect(mockSaveRecipe).not.toHaveBeenCalled();
+        });
+
+        it('preserves the recipe ID in the update payload', () => {
+            setupHooks({ fetchedRecipe: mockFetchedRecipe });
+            render(<RecipeEditorPage />, { wrapper: EditWrapper });
+            fireEvent.click(screen.getByRole('button', { name: /update recipe/i }));
+            expect(mockUpdateRecipe).toHaveBeenCalledWith(
+                expect.objectContaining({ id: mockFetchedRecipe.id })
+            );
+        });
+
+        it('does not reset the form after a successful update', async () => {
+            setupHooks({ fetchedRecipe: mockFetchedRecipe });
+            const { rerender } = render(<RecipeEditorPage />, { wrapper: EditWrapper });
+
+            setupHooks({ fetchedRecipe: mockFetchedRecipe, updatedRecipe: mockFetchedRecipe });
+            await act(async () => {
+                rerender(<RecipeEditorPage />);
+            });
+
+            expect(screen.getByLabelText(/recipe name/i)).toHaveValue('Existing Recipe');
+        });
+
+        it('shows "Recipe updated successfully!" toast on success', async () => {
+            setupHooks({ fetchedRecipe: mockFetchedRecipe });
+            const { rerender } = render(<RecipeEditorPage />, { wrapper: EditWrapper });
+
+            setupHooks({ fetchedRecipe: mockFetchedRecipe, updatedRecipe: mockFetchedRecipe });
+            await act(async () => {
+                rerender(<RecipeEditorPage />);
+            });
+
+            expect(screen.getByText('Recipe updated successfully!')).toBeInTheDocument();
+        });
+
+        it('shows an error toast when the update fails', async () => {
+            setupHooks({ fetchedRecipe: mockFetchedRecipe });
+            const { rerender } = render(<RecipeEditorPage />, { wrapper: EditWrapper });
+
+            setupHooks({ fetchedRecipe: mockFetchedRecipe, updateError: 'Server Error' });
+            await act(async () => {
+                rerender(<RecipeEditorPage />);
+            });
+
+            expect(screen.getByText('Could not update recipe: Server Error')).toBeInTheDocument();
         });
     });
 });
