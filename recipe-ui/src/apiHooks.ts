@@ -1,152 +1,70 @@
-import {useCallback, useState} from "react";
-import {Ingredient, Recipe, JsonUnit} from "./Types.ts";
-import axios, {AxiosResponse} from "axios";
-import {Units} from "./Unit/Units.ts";
-import {Unit} from "./Unit/Unit.ts";
-
-const apiBase = import.meta.env.VITE_API_BASE;
+import { useCallback } from "react";
+import { Ingredient, Recipe, JsonUnit } from "./Types.ts";
+import { Units } from "./Unit/Units.ts";
+import { Unit } from "./Unit/Unit.ts";
+import api from "./api.ts";
+import { useAsync } from "./hooks/useAsync.ts";
 
 export function useFetchUnits() {
-
-    const [units, setUnits] = useState<Units>();
-    const [unitError, setUnitUnitError] = useState<string | null>(null);
-    const [unitLoading, setUnitUnitLoading] = useState(false);
+    const { data: units, error: unitError, loading: unitLoading, execute } = useAsync<Units>();
 
     const fetchUnits = useCallback(() => {
-        (
-            async () => {
-                try {
-                    setUnitUnitLoading(true);
-                    const response: AxiosResponse = await axios.get(apiBase+'unit/');
-                    const units: Units = new Units(response.data.map((jsonUnit: JsonUnit) => {
-                        return Unit.fromJson(jsonUnit);
-                    }));
-                    setUnits(units);
-                } catch (error) {
-                    setUnitUnitError((error as Error).message);
-                } finally {
-                    setUnitUnitLoading(false);
-                }
-            }
-        )()
-    }, [])
-    return { units, unitError, unitLoading, fetchUnits }
+        execute(() =>
+            api.get<JsonUnit[]>('unit/').then(r =>
+                new Units(r.data.map((jsonUnit: JsonUnit) => Unit.fromJson(jsonUnit)))
+            )
+        );
+    }, [execute]);
+
+    return { units, unitError, unitLoading, fetchUnits };
 }
 
 export function useFetchRecipes() {
-
-    const [recipes, setRecipes] = useState<Recipe[]>([]);
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+    const { data, error, loading, execute } = useAsync<Recipe[]>();
 
     const fetchRecipes = useCallback(() => {
-        (
-            async () => {
-                try {
-                    setLoading(true);
-                    const response: AxiosResponse = await axios.get(apiBase+'recipe/');
-                    const recipes: Recipe[] = response.data;
-                    setRecipes(recipes);
-                } catch (error) {
-                    setError((error as Error).message);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        )()
-    }, [])
-    return { recipes, error, loading, fetchRecipes }
+        execute(() => api.get<Recipe[]>('recipe/').then(r => r.data));
+    }, [execute]);
+
+    return { recipes: data ?? [], error, loading, fetchRecipes };
 }
 
 export function useFetchRecipe() {
-
-    const [recipe, setRecipe] = useState<Recipe | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+    const { data: recipe, error, loading, execute } = useAsync<Recipe>();
 
     const fetchRecipe = useCallback((recipeId: number) => {
-        (
-            async () => {
-                try {
-                    setLoading(true);
-                    const response: AxiosResponse = await axios.get(apiBase+'recipe/'+recipeId);
-                    const recipe: Recipe = response.data;
-                    setRecipe(recipe);
-                } catch (error) {
-                    setError((error as Error).message);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        )()
-    }, [])
-    return { recipe, error, loading, fetchRecipe }
+        execute(() => api.get<Recipe>(`recipe/${recipeId}`).then(r => r.data));
+    }, [execute]);
+
+    return { recipe: recipe ?? null, error, loading, fetchRecipe };
 }
 
-
 export function useSaveRecipe() {
+    const { data: savedRecipe, error, loading, execute } = useAsync<Recipe>();
 
-    const [savedRecipe, setSavedRecipe] = useState<Recipe>();
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+    const saveRecipe = useCallback((recipe: Recipe) => {
+        return execute(() => api.post<Recipe>('recipe/', recipe).then(r => r.data));
+    }, [execute]);
 
-    const saveRecipe = async (recipe: Recipe) => {
-       try {
-            setLoading(true);
-            const response: AxiosResponse = await axios.post(apiBase+'recipe/', recipe);
-            setSavedRecipe(response.data);
-        } catch (error) {
-            setError((error as Error).message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return { savedRecipe, error, loading, saveRecipe }
+    return { savedRecipe, error, loading, saveRecipe };
 }
 
 export function useFetchIngredients() {
-
-    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+    const { data, error, loading, execute } = useAsync<Ingredient[]>();
 
     const fetchIngredients = useCallback(() => {
-        (
-            async () => {
-                try {
-                    setLoading(true);
-                    const response: AxiosResponse = await axios.get(apiBase+'ingredient/');
-                    const ingredients: Ingredient[] = response.data;
-                    setIngredients(ingredients);
-                } catch (error) {
-                    setError((error as Error).message);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        )()
-    }, [])
-    return { allIngredients: ingredients, ingredientError: error, ingredientLoading: loading, fetchIngredients }
+        execute(() => api.get<Ingredient[]>('ingredient/').then(r => r.data));
+    }, [execute]);
+
+    return { allIngredients: data ?? [], ingredientError: error, ingredientLoading: loading, fetchIngredients };
 }
 
 export function useSaveIngredient() {
-    const [savedIngredient, setSavedIngredient] = useState<Ingredient>();
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+    const { data: savedIngredient, error: saveIngredientError, loading: saveIngredientLoading, execute } = useAsync<Ingredient>();
 
-    const saveIngredient = async (ingredient: Ingredient) => {
-                try {
-                    setLoading(true);
-                    const response: AxiosResponse = await axios.post(apiBase+'ingredient/', ingredient);
-                    setSavedIngredient(response.data);
-                } catch (error) {
-                    setError((error as Error).message);
-                }
-            };
+    const saveIngredient = useCallback((ingredient: Ingredient) => {
+        return execute(() => api.post<Ingredient>('ingredient/', ingredient).then(r => r.data));
+    }, [execute]);
 
-    return { savedIngredient: savedIngredient,
-        saveIngredientError: error,
-        saveIngredientLoading: loading,
-        saveIngredient}
+    return { savedIngredient, saveIngredientError, saveIngredientLoading, saveIngredient };
 }

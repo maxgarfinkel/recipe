@@ -1,16 +1,21 @@
 // apiHooks.test.ts
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios from 'axios';
 import {useFetchIngredients, useFetchRecipe, useFetchRecipes, useFetchUnits, useSaveRecipe} from './apiHooks';
 import {Ingredient, Recipe} from './Types';
 import {deferred} from "./testUtils/deferred.ts";
 import {Unit} from "./Unit/Unit.ts";
 import {Units} from "./Unit/Units.ts";
 
-// Mock axios
-vi.mock('axios');
-const mockedAxios = vi.mocked(axios, true)
+vi.mock('./api', () => ({
+    default: {
+        get: vi.fn(),
+        post: vi.fn(),
+    }
+}));
+
+import api from './api';
+const mockedApi = vi.mocked(api, true);
 
 describe('useSaveRecipe', () => {
     const mockRecipe: Recipe = {
@@ -40,10 +45,7 @@ describe('useSaveRecipe', () => {
     });
 
     it('should successfully save a recipe', async () => {
-        // Mock successful axios post
-        mockedAxios.post.mockResolvedValueOnce({
-            data: mockSavedRecipe 
-        });
+        mockedApi.post.mockResolvedValueOnce({ data: mockSavedRecipe });
 
         const { result } = renderHook(() => useSaveRecipe());
 
@@ -51,10 +53,7 @@ describe('useSaveRecipe', () => {
             await result.current.saveRecipe(mockRecipe);
         });
 
-        expect(axios.post).toHaveBeenCalledWith(
-            expect.stringContaining('/recipe/'), 
-            mockRecipe
-        );
+        expect(api.post).toHaveBeenCalledWith('recipe/', mockRecipe);
         expect(result.current.savedRecipe).toEqual(mockSavedRecipe);
         expect(result.current.error).toBeNull();
         expect(result.current.loading).toBeFalsy();
@@ -62,8 +61,7 @@ describe('useSaveRecipe', () => {
 
     it('should handle save failure', async () => {
         const errorMessage = 'Failed to save recipe';
-        // Mock failed axios post
-        mockedAxios.post.mockRejectedValueOnce(new Error(errorMessage));
+        mockedApi.post.mockRejectedValueOnce(new Error(errorMessage));
 
         const { result } = renderHook(() => useSaveRecipe());
 
@@ -71,23 +69,16 @@ describe('useSaveRecipe', () => {
             await result.current.saveRecipe(mockRecipe);
         });
 
-        expect(axios.post).toHaveBeenCalledWith(
-            expect.stringContaining('/recipe/'), 
-            mockRecipe
-        );
+        expect(api.post).toHaveBeenCalledWith('recipe/', mockRecipe);
         expect(result.current.savedRecipe).toBeUndefined();
         expect(result.current.error).toBe(errorMessage);
         expect(result.current.loading).toBeFalsy();
     });
 
     it('should set loading state while saving', async () => {
-        // Mock delayed axios post
-
         const deferredPost = deferred<{ data: Recipe }>();
 
-        mockedAxios.post.mockImplementationOnce(() =>
-            deferredPost.promise
-        );
+        mockedApi.post.mockImplementationOnce(() => deferredPost.promise);
 
         const { result } = renderHook(() => useSaveRecipe());
 
@@ -108,10 +99,7 @@ describe('useSaveRecipe', () => {
     });
 
     it('should maintain previous savedRecipe state on error', async () => {
-        // First save succeeds
-        mockedAxios.post.mockResolvedValueOnce({
-            data: mockSavedRecipe 
-        });
+        mockedApi.post.mockResolvedValueOnce({ data: mockSavedRecipe });
 
         const { result } = renderHook(() => useSaveRecipe());
 
@@ -119,8 +107,7 @@ describe('useSaveRecipe', () => {
             await result.current.saveRecipe(mockRecipe);
         });
 
-        // Second save fails
-        mockedAxios.post.mockRejectedValueOnce(new Error('Failed'));
+        mockedApi.post.mockRejectedValueOnce(new Error('Failed'));
 
         await act(async () => {
             await result.current.saveRecipe({...mockRecipe, name: "New Name"});
@@ -148,7 +135,7 @@ describe('useFetchRecipes', () => {
     })
 
     it('should fetch recipes on mount', async () => {
-        mockedAxios.get.mockResolvedValueOnce({ data: mockRecipes });
+        mockedApi.get.mockResolvedValueOnce({ data: mockRecipes });
 
         const { result } = renderHook(() => useFetchRecipes());
 
@@ -163,7 +150,7 @@ describe('useFetchRecipes', () => {
 
     it('should handle fetch failure', async () => {
         const errorMessage = 'Failed to fetch recipes';
-        mockedAxios.get.mockRejectedValueOnce(new Error(errorMessage));
+        mockedApi.get.mockRejectedValueOnce(new Error(errorMessage));
 
         const { result } = renderHook(() => useFetchRecipes());
 
@@ -177,12 +164,10 @@ describe('useFetchRecipes', () => {
     })
 
     it('should set loading state when fetching', async () => {
-
         const deferredGet = deferred<{ data: Recipe[] }>();
 
-        mockedAxios.get.mockImplementationOnce(() =>
-            deferredGet.promise
-        );
+        mockedApi.get.mockImplementationOnce(() => deferredGet.promise);
+
         const { result } = renderHook(() => useFetchRecipes());
 
         await act(async () => {
@@ -203,7 +188,7 @@ describe('useFetchRecipes', () => {
     });
 
     it('should maintain previous recipes state on error', async () => {
-        mockedAxios.get.mockResolvedValueOnce({ data: mockRecipes });
+        mockedApi.get.mockResolvedValueOnce({ data: mockRecipes });
 
         const { result } = renderHook(() => useFetchRecipes());
 
@@ -211,7 +196,7 @@ describe('useFetchRecipes', () => {
             result.current.fetchRecipes();
         })
 
-        mockedAxios.get.mockRejectedValueOnce(new Error('Failed'));
+        mockedApi.get.mockRejectedValueOnce(new Error('Failed'));
 
         await act(async () => {
             result.current.fetchRecipes();
@@ -220,7 +205,6 @@ describe('useFetchRecipes', () => {
         expect(result.current.error).toBe('Failed');
         expect(result.current.recipes).toBe(mockRecipes);
         expect(result.current.loading).toBeFalsy();
-
     })
 })
 
@@ -240,7 +224,7 @@ describe('useFetchRecipe', () => {
     })
 
     it('should fetch recipe on mount', async () => {
-        mockedAxios.get.mockResolvedValueOnce({ data: mockRecipe });
+        mockedApi.get.mockResolvedValueOnce({ data: mockRecipe });
 
         const { result } = renderHook(() => useFetchRecipe());
 
@@ -255,7 +239,7 @@ describe('useFetchRecipe', () => {
 
     it('should handle fetch failure', async () => {
         const errorMessage = 'Failed to fetch recipe';
-        mockedAxios.get.mockRejectedValueOnce(new Error(errorMessage));
+        mockedApi.get.mockRejectedValueOnce(new Error(errorMessage));
 
         const { result } = renderHook(() => useFetchRecipe());
 
@@ -269,12 +253,10 @@ describe('useFetchRecipe', () => {
     })
 
     it('should set loading state when fetching', async () => {
-
         const deferredGet = deferred<{ data: Recipe }>();
 
-        mockedAxios.get.mockImplementationOnce(() =>
-            deferredGet.promise
-        );
+        mockedApi.get.mockImplementationOnce(() => deferredGet.promise);
+
         const { result } = renderHook(() => useFetchRecipe());
 
         await act(async () => {
@@ -295,7 +277,7 @@ describe('useFetchRecipe', () => {
     });
 
     it('should maintain previous recipes state on error', async () => {
-        mockedAxios.get.mockResolvedValueOnce({ data: mockRecipe });
+        mockedApi.get.mockResolvedValueOnce({ data: mockRecipe });
 
         const { result } = renderHook(() => useFetchRecipe());
 
@@ -303,7 +285,7 @@ describe('useFetchRecipe', () => {
             result.current.fetchRecipe(1);
         })
 
-        mockedAxios.get.mockRejectedValueOnce(new Error('Failed'));
+        mockedApi.get.mockRejectedValueOnce(new Error('Failed'));
 
         await act(async () => {
             result.current.fetchRecipe(1);
@@ -312,7 +294,6 @@ describe('useFetchRecipe', () => {
         expect(result.current.error).toBe('Failed');
         expect(result.current.recipe).toBe(mockRecipe);
         expect(result.current.loading).toBeFalsy();
-
     })
 })
 
@@ -334,7 +315,7 @@ describe('useFetchUnits', () => {
     })
 
     it('should fetch recipes on mount', async () => {
-        mockedAxios.get.mockResolvedValueOnce({ data: mockUnitJson });
+        mockedApi.get.mockResolvedValueOnce({ data: mockUnitJson });
 
         const { result } = renderHook(() => useFetchUnits());
 
@@ -349,7 +330,7 @@ describe('useFetchUnits', () => {
 
     it('should handle fetch failure', async () => {
         const errorMessage = 'Failed to fetch units';
-        mockedAxios.get.mockRejectedValueOnce(new Error(errorMessage));
+        mockedApi.get.mockRejectedValueOnce(new Error(errorMessage));
 
         const { result } = renderHook(() => useFetchUnits());
 
@@ -363,12 +344,10 @@ describe('useFetchUnits', () => {
     })
 
     it('should set loading state when fetching', async () => {
-
         const deferredGet = deferred<{ data: Unit[] }>();
 
-        mockedAxios.get.mockImplementationOnce(() =>
-            deferredGet.promise
-        );
+        mockedApi.get.mockImplementationOnce(() => deferredGet.promise);
+
         const { result } = renderHook(() => useFetchUnits());
 
         await act(async () => {
@@ -389,7 +368,7 @@ describe('useFetchUnits', () => {
     });
 
     it('should maintain previous units state on error', async () => {
-        mockedAxios.get.mockResolvedValueOnce({ data: mockUnitJson });
+        mockedApi.get.mockResolvedValueOnce({ data: mockUnitJson });
 
         const { result } = renderHook(() => useFetchUnits());
 
@@ -397,7 +376,7 @@ describe('useFetchUnits', () => {
             result.current.fetchUnits();
         })
 
-        mockedAxios.get.mockRejectedValueOnce(new Error('Failed'));
+        mockedApi.get.mockRejectedValueOnce(new Error('Failed'));
 
         await act(async () => {
             result.current.fetchUnits();
@@ -406,7 +385,6 @@ describe('useFetchUnits', () => {
         expect(result.current.unitError).toBe('Failed');
         expect(result.current.units).toEqual(mockUnits);
         expect(result.current.unitLoading).toBeFalsy();
-
     })
 })
 
@@ -426,7 +404,7 @@ describe('useFetchIngredients', () => {
     })
 
     it('should fetch ingredients on mount', async () => {
-        mockedAxios.get.mockResolvedValueOnce({ data: mockIngredients });
+        mockedApi.get.mockResolvedValueOnce({ data: mockIngredients });
 
         const { result } = renderHook(() => useFetchIngredients());
 
@@ -441,7 +419,7 @@ describe('useFetchIngredients', () => {
 
     it('should handle fetch failure', async () => {
         const errorMessage = 'Failed to fetch ingredients';
-        mockedAxios.get.mockRejectedValueOnce(new Error(errorMessage));
+        mockedApi.get.mockRejectedValueOnce(new Error(errorMessage));
 
         const { result } = renderHook(() => useFetchIngredients());
 
@@ -455,12 +433,10 @@ describe('useFetchIngredients', () => {
     })
 
     it('should set loading state when fetching', async () => {
-
         const deferredGet = deferred<{ data: Ingredient[] }>();
 
-        mockedAxios.get.mockImplementationOnce(() =>
-            deferredGet.promise
-        );
+        mockedApi.get.mockImplementationOnce(() => deferredGet.promise);
+
         const { result } = renderHook(() => useFetchIngredients());
 
         await act(async () => {
@@ -481,7 +457,7 @@ describe('useFetchIngredients', () => {
     });
 
     it('should maintain previous ingredient state on error', async () => {
-        mockedAxios.get.mockResolvedValueOnce({ data: mockIngredients });
+        mockedApi.get.mockResolvedValueOnce({ data: mockIngredients });
 
         const { result } = renderHook(() => useFetchIngredients());
 
@@ -489,7 +465,7 @@ describe('useFetchIngredients', () => {
             result.current.fetchIngredients();
         })
 
-        mockedAxios.get.mockRejectedValueOnce(new Error('Failed'));
+        mockedApi.get.mockRejectedValueOnce(new Error('Failed'));
 
         await act(async () => {
             result.current.fetchIngredients();
@@ -498,6 +474,5 @@ describe('useFetchIngredients', () => {
         expect(result.current.ingredientError).toBe('Failed');
         expect(result.current.allIngredients).toBe(mockIngredients);
         expect(result.current.ingredientLoading).toBeFalsy();
-
     })
 })
