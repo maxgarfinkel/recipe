@@ -6,7 +6,7 @@ import IngredientsSelector from "../Ingredient/IngredientsSelector.tsx";
 import { IngredientQuantity, Recipe } from "../Types.ts";
 import MethodEditor from "./MethodEditor.tsx";
 import IngredientList from "./IngredientList.tsx";
-import { useToast } from "../hooks/useToast.ts";
+import { useToast } from "../context/ToastContext.tsx";
 
 type FormState = {
     name: string;
@@ -53,7 +53,7 @@ function RecipeEditorPage() {
     const [state, dispatch] = useReducer(formReducer, initialState);
     const { name, servings, method, ingredients } = state;
 
-    const { toast, showToast, dismissToast } = useToast();
+    const { showToast } = useToast();
 
     const ref = useRef<MDXEditorMethods>(null);
 
@@ -64,6 +64,16 @@ function RecipeEditorPage() {
     useEffect(() => {
         fetchIngredients();
     }, [fetchIngredients]);
+
+    useEffect(() => {
+        if (!ingredientError) return;
+        showToast(`Could not load ingredients: ${ingredientError}`, 'error');
+    }, [ingredientError, showToast]);
+
+    useEffect(() => {
+        if (!unitError) return;
+        showToast(`Could not load units: ${unitError}`, 'error');
+    }, [unitError, showToast]);
 
     useEffect(() => {
         if (!savedRecipe) return;
@@ -92,7 +102,6 @@ function RecipeEditorPage() {
         <div className="py-8 px-4 md:px-0">
             <h1>New Recipe</h1>
             {(ingredientLoading || unitLoading) && <p>Loading...</p>}
-            {(ingredientError || unitError) && <p>Error</p>}
             {allIngredients && allIngredients.length > 0 && units &&
                 <div className="flex flex-col gap-10">
                     <div className="flex flex-col gap-2 max-w-lg">
@@ -148,20 +157,6 @@ function RecipeEditorPage() {
                     </div>
                 </div>
             }
-
-            {toast && (
-                <div className={`fixed bottom-6 right-6 z-[200] flex items-center gap-4 px-5 py-4 rounded-xl shadow-xl text-white text-sm font-medium max-w-sm
-                    ${toast.type === 'success' ? 'bg-mid' : 'bg-red-600'}`}>
-                    <span className="flex-1">{toast.message}</span>
-                    <button
-                        aria-label="Dismiss"
-                        onClick={dismissToast}
-                        className="opacity-60 hover:opacity-100 transition-opacity cursor-pointer text-lg leading-none"
-                    >
-                        &times;
-                    </button>
-                </div>
-            )}
         </div>
     );
 }

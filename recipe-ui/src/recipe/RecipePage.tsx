@@ -3,6 +3,7 @@ import "./RecipePage.css";
 import {useFetchRecipe} from "../apiHooks.ts";
 import {useEffect, useState} from "react";
 import Markdown from "react-markdown";
+import {useToast} from "../context/ToastContext.tsx";
 
 
 function RecipePage() {
@@ -11,6 +12,7 @@ function RecipePage() {
 
     const {recipe, loading, error, fetchRecipe} = useFetchRecipe();
     const [servings, setServings] = useState<number>(1);
+    const {showToast} = useToast();
 
     useEffect(() => {
         if(!id) {
@@ -23,13 +25,17 @@ function RecipePage() {
         if (recipe) setServings(recipe.servings);
     }, [recipe]);
 
+    useEffect(() => {
+        if (!error) return;
+        showToast(`Could not load recipe: ${error}`, 'error');
+    }, [error, showToast]);
+
     const formatQuantity = (value: number): string =>
         parseFloat(value.toFixed(2)).toString();
 
     return (
         <div className="py-8 px-4 md:px-0">
             {loading && <p>Loading...</p>}
-            {error && <p>There was an error loading the recipe</p>}
             {recipe &&
                 <div className="flex flex-col gap-10">
                     <div>

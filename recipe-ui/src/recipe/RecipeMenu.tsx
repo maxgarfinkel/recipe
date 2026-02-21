@@ -3,6 +3,7 @@ import {Recipe} from "../Types.ts";
 import "./RecipeMenu.css";
 import {Link} from "react-router-dom";
 import {useEffect} from "react";
+import {useToast} from "../context/ToastContext.tsx";
 
 function alphabeticalRecipes(recipes: Recipe[]): Map<string, Recipe[]> {
     const alphabeticalRecipes = new Map<string, Recipe[]>();
@@ -20,16 +21,21 @@ const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
 
 function RecipeMenu() {
 
-    const {recipes,loading,error, fetchRecipes} = useFetchRecipes();
+    const {recipes, loading, error, fetchRecipes} = useFetchRecipes();
+    const {showToast} = useToast();
 
     useEffect(() => {
         fetchRecipes()
     },[fetchRecipes]);
 
+    useEffect(() => {
+        if (!error) return;
+        showToast(`Could not load recipes: ${error}`, 'error');
+    }, [error, showToast]);
+
     return (<>
     <h1>Recipes</h1>
         {loading && <p>Loading recipes...</p>}
-        {error && <p>There was an error loading recipes</p>}
         {recipes &&
             <>
                 {

@@ -68,6 +68,7 @@ vi.mock('../apiHooks', () => ({
 
 import RecipeEditorPage from './RecipeEditorPage';
 import { useFetchIngredients, useFetchUnits, useSaveRecipe } from '../apiHooks';
+import { ToastProvider } from '../context/ToastContext';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -156,25 +157,25 @@ describe('RecipeEditorPage', () => {
     describe('loading and error states', () => {
         it('shows a loading indicator while ingredients are loading', () => {
             setupHooks({ ingredientLoading: true, ingredients: [] });
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             expect(screen.getByText('Loading...')).toBeInTheDocument();
         });
 
         it('shows a loading indicator while units are loading', () => {
             setupHooks({ unitLoading: true, ingredients: [] });
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             expect(screen.getByText('Loading...')).toBeInTheDocument();
         });
 
-        it('shows an error message when the ingredient fetch fails', () => {
+        it('shows an error toast when the ingredient fetch fails', () => {
             setupHooks({ ingredientError: 'Network error', ingredients: [] });
-            render(<RecipeEditorPage />);
-            expect(screen.getByText('Error')).toBeInTheDocument();
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
+            expect(screen.getByText('Could not load ingredients: Network error')).toBeInTheDocument();
         });
 
         it('does not render the form before data has loaded', () => {
             setupHooks({ ingredients: [] });
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             expect(screen.queryByLabelText(/recipe name/i)).not.toBeInTheDocument();
         });
     });
@@ -183,18 +184,18 @@ describe('RecipeEditorPage', () => {
 
     describe('form rendering', () => {
         it('renders the recipe name and servings inputs once data has loaded', () => {
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             expect(screen.getByLabelText(/recipe name/i)).toBeInTheDocument();
             expect(screen.getByLabelText(/servings/i)).toBeInTheDocument();
         });
 
         it('renders the method editor', () => {
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             expect(screen.getByTestId('method-editor')).toBeInTheDocument();
         });
 
         it('renders the save button', () => {
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             expect(screen.getByRole('button', { name: /save recipe/i })).toBeInTheDocument();
         });
     });
@@ -203,21 +204,21 @@ describe('RecipeEditorPage', () => {
 
     describe('form interaction', () => {
         it('reflects typed recipe name in the input', () => {
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             const input = screen.getByLabelText(/recipe name/i);
             fireEvent.change(input, { target: { value: 'Pasta Bake' } });
             expect(input).toHaveValue('Pasta Bake');
         });
 
         it('reflects typed servings value in the input', () => {
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             const input = screen.getByLabelText(/servings/i);
             fireEvent.change(input, { target: { value: '6' } });
             expect(input).toHaveValue('6');
         });
 
         it('shows an added ingredient in the list', () => {
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             fireEvent.click(screen.getByTestId('add-ingredient-btn'));
             expect(screen.getByText(/flour/i)).toBeInTheDocument();
         });
@@ -227,7 +228,7 @@ describe('RecipeEditorPage', () => {
 
     describe('saving', () => {
         it('calls saveRecipe with the correct recipe payload', () => {
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             fireEvent.change(screen.getByLabelText(/recipe name/i), { target: { value: 'Pasta' } });
             fireEvent.change(screen.getByLabelText(/servings/i), { target: { value: '2' } });
             fireEvent.change(screen.getByTestId('method-editor'), { target: { value: 'Boil the pasta' } });
@@ -243,7 +244,7 @@ describe('RecipeEditorPage', () => {
         });
 
         it('includes ingredients added via the selector in the save payload', () => {
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             fireEvent.click(screen.getByTestId('add-ingredient-btn'));
             fireEvent.click(screen.getByRole('button', { name: /save recipe/i }));
 
@@ -255,7 +256,7 @@ describe('RecipeEditorPage', () => {
         });
 
         it('defaults servings to 0 when the field is left empty', () => {
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             fireEvent.click(screen.getByRole('button', { name: /save recipe/i }));
             expect(mockSaveRecipe).toHaveBeenCalledWith(
                 expect.objectContaining({ servings: 0 })
@@ -264,7 +265,7 @@ describe('RecipeEditorPage', () => {
 
         it('disables the save button and shows "Saving…" while in flight', () => {
             setupHooks({ saving: true });
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             const button = screen.getByRole('button', { name: /saving/i });
             expect(button).toBeDisabled();
         });
@@ -275,13 +276,13 @@ describe('RecipeEditorPage', () => {
     describe('success toast', () => {
         it('shows a success toast when the recipe is saved', () => {
             setupHooks({ savedRecipe: mockSavedRecipe });
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             expect(screen.getByText('Recipe saved successfully!')).toBeInTheDocument();
         });
 
         it('resets all form fields after a successful save', async () => {
             setupHooks();
-            const { rerender } = render(<RecipeEditorPage />);
+            const { rerender } = render(<RecipeEditorPage />, { wrapper: ToastProvider });
 
             fireEvent.change(screen.getByLabelText(/recipe name/i), { target: { value: 'My Recipe' } });
             fireEvent.change(screen.getByLabelText(/servings/i), { target: { value: '4' } });
@@ -300,7 +301,7 @@ describe('RecipeEditorPage', () => {
 
         it('dismisses the toast when the close button is clicked', () => {
             setupHooks({ savedRecipe: mockSavedRecipe });
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
             expect(screen.queryByText('Recipe saved successfully!')).not.toBeInTheDocument();
         });
@@ -308,7 +309,7 @@ describe('RecipeEditorPage', () => {
         it('auto-dismisses the success toast after 4 seconds', async () => {
             vi.useFakeTimers();
             setupHooks({ savedRecipe: mockSavedRecipe });
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
 
             expect(screen.getByText('Recipe saved successfully!')).toBeInTheDocument();
 
@@ -326,13 +327,13 @@ describe('RecipeEditorPage', () => {
     describe('error toast', () => {
         it('shows an error toast with the failure message', () => {
             setupHooks({ saveError: 'Network Error' });
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
             expect(screen.getByText('Could not save recipe: Network Error')).toBeInTheDocument();
         });
 
         it('preserves form data when the save fails', async () => {
             setupHooks();
-            const { rerender } = render(<RecipeEditorPage />);
+            const { rerender } = render(<RecipeEditorPage />, { wrapper: ToastProvider });
 
             fireEvent.change(screen.getByLabelText(/recipe name/i), { target: { value: 'Cheesecake' } });
 
@@ -348,7 +349,7 @@ describe('RecipeEditorPage', () => {
         it('auto-dismisses the error toast after 4 seconds', async () => {
             vi.useFakeTimers();
             setupHooks({ saveError: 'Network Error' });
-            render(<RecipeEditorPage />);
+            render(<RecipeEditorPage />, { wrapper: ToastProvider });
 
             expect(screen.getByText(/Could not save recipe/)).toBeInTheDocument();
 

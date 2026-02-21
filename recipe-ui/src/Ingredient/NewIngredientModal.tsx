@@ -2,6 +2,7 @@ import {IngredientQuantity} from "../Types.ts";
 import {useEffect, useRef, useState} from "react";
 import {Units} from "../Unit/Units.ts";
 import {useSaveIngredient} from "../apiHooks.ts";
+import {useToast} from "../context/ToastContext.tsx";
 
 export interface NewIngredientModalProps {
     name: string;
@@ -15,7 +16,8 @@ function NewIngredientModal({...props}: NewIngredientModalProps) {
     const closeModal = props.closeModal;
     const units = props.units;
 
-    const {savedIngredient, saveIngredientError, saveIngredientLoading, saveIngredient} = useSaveIngredient()
+    const {savedIngredient, saveIngredientError, saveIngredient} = useSaveIngredient();
+    const {showToast} = useToast();
     const [name, setName] = useState(props.name);
     const [quantity, setQuantity] = useState(props.quantity);
     const [selectedUnitId, setSelectedUnitId] = useState(units.getFirst().id.toString());
@@ -23,7 +25,6 @@ function NewIngredientModal({...props}: NewIngredientModalProps) {
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        // Focus the input when modal opens
         inputRef.current?.focus();
     }, []);
 
@@ -38,8 +39,12 @@ function NewIngredientModal({...props}: NewIngredientModalProps) {
         }
     }, [savedIngredient]);
 
+    useEffect(() => {
+        if (!saveIngredientError) return;
+        showToast(`Could not save ingredient: ${saveIngredientError}`, 'error');
+    }, [saveIngredientError, showToast]);
+
     const createNewIngredient = () => {
-        console.log(selectedUnitId, units);
         const unit = units.getUnit(selectedUnitId)
 
         saveIngredient({
