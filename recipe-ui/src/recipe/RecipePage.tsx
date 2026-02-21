@@ -1,17 +1,30 @@
 import {Link, useParams} from "react-router-dom";
 import "./RecipePage.css";
 import {useFetchRecipe} from "../apiHooks.ts";
-import {useEffect, useState} from "react";
+import {useEffect, useReducer} from "react";
 import Markdown from "react-markdown";
 import {useToast} from "../context/ToastContext.tsx";
 
+
+type ServingsAction =
+    | { type: 'init'; value: number }
+    | { type: 'increment' }
+    | { type: 'decrement' };
+
+function servingsReducer(state: number, action: ServingsAction): number {
+    switch (action.type) {
+        case 'init':      return action.value;
+        case 'increment': return state + 1;
+        case 'decrement': return Math.max(1, state - 1);
+    }
+}
 
 function RecipePage() {
 
     const {id} = useParams();
 
     const {recipe, loading, error, fetchRecipe} = useFetchRecipe();
-    const [servings, setServings] = useState<number>(1);
+    const [servings, dispatch] = useReducer(servingsReducer, 1);
     const {showToast} = useToast();
 
     useEffect(() => {
@@ -22,7 +35,7 @@ function RecipePage() {
     },[fetchRecipe, id]);
 
     useEffect(() => {
-        if (recipe) setServings(recipe.servings);
+        if (recipe) dispatch({ type: 'init', value: recipe.servings });
     }, [recipe]);
 
     useEffect(() => {
@@ -45,7 +58,7 @@ function RecipePage() {
                         <h1>{recipe.name}</h1>
                         <div className="flex items-center gap-3">
                             <button
-                                onClick={() => setServings(s => Math.max(1, s - 1))}
+                                onClick={() => dispatch({ type: 'decrement' })}
                                 className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-mid hover:bg-mid hover:text-white hover:border-mid transition-colors cursor-pointer"
                             >
                                 −
@@ -54,7 +67,7 @@ function RecipePage() {
                                 {servings} serving{servings !== 1 ? 's' : ''}
                             </div>
                             <button
-                                onClick={() => setServings(s => s + 1)}
+                                onClick={() => dispatch({ type: 'increment' })}
                                 className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-200 text-mid hover:bg-mid hover:text-white hover:border-mid transition-colors cursor-pointer"
                             >
                                 +
