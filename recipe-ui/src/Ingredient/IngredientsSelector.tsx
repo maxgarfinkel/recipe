@@ -23,7 +23,7 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
 
     const [showNewIngredientModal, setShowNewIngredientModal] = useState<boolean>(false);
 
-    const onKeyPress = (event) => {
+    const onKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
 
         if(ingredientSearchResults.length < 1) {
             return;
