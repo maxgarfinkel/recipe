@@ -11,12 +11,12 @@ export interface IngredientsSelectorProps {
 }
 
 function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSelectorProps) {
+    const searchInputRef = useRef<HTMLInputElement>(null);
     const quantityFieldRef = useRef<HTMLInputElement>(null);
 
     const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
     const [selectedUnitId, setSelectedUnitId] = useState<string>("");
     const [quantity, setQuantity] = useState("");
-    const [autoFocusIngredients, setautoFocusIngredients] = useState(false);
 
     const [ingredientSearchTerm, setIngredientSearchTerm] = useState<string>("");
     const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
@@ -60,18 +60,28 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
         quantityFieldRef.current?.focus();
     }
 
+    const reset = () => {
+        setIngredientSearchResults([]);
+        setIngredientSearchTerm("");
+        setSelectedResultIndex(null);
+        setSelectedIngredient(null);
+        setSelectedUnitId("");
+        setQuantity("");
+        setTimeout(() => searchInputRef.current?.focus(), 0);
+    }
+
     const addIngredientQuantity = () => {
         if (selectedIngredient != null) {
             addIngredient({id: null, ingredient: selectedIngredient, unit: units.getUnit(selectedUnitId), quantity: Number(quantity)});
-            setIngredientSearchResults([]);
-            setIngredientSearchTerm("");
-            setSelectedResultIndex(null);
-            setSelectedIngredient(null);
-            setSelectedUnitId("");
-            setQuantity("");
+            reset();
         } else {
             setShowNewIngredientModal(true);
         }
+    }
+
+    const handleNewIngredient = (iq: IngredientQuantity) => {
+        addIngredient(iq);
+        reset();
     }
 
     return (<>
@@ -82,22 +92,21 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
                 units={units}
                 quantity={quantity}
                 closeModal={() => {setShowNewIngredientModal(false);}}
-                ingredientCallback={addIngredient}
+                ingredientCallback={handleNewIngredient}
             />}
         {ingredients.length > 0 &&
             <div className="relative">
                 <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-mid focus-within:border-transparent">
                     {selectedIngredient === null &&
                         <input
+                            ref={searchInputRef}
                             placeholder="search for ingredients"
-                            autoFocus={autoFocusIngredients}
                             value={ingredientSearchTerm}
                             onKeyUp={onKeyPress}
                             onChange={(e) => {
                                 setIngredientSearchTerm(e.target.value);
                                 setIngredientSearchResults(searchIngredients(e.target.value, ingredients));
                             }}
-                            onFocus={() => setautoFocusIngredients(true)}
                             className="flex-1 min-w-0 focus:outline-none text-dark"
                         />
                     }
