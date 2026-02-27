@@ -15,6 +15,7 @@ export type FormAction =
     | { type: 'set_method'; value: string }
     | { type: 'add_ingredient'; ingredient: IngredientQuantity }
     | { type: 'remove_ingredient'; index: number }
+    | { type: 'update_ingredient'; index: number; ingredient: IngredientQuantity }
     | { type: 'saved' }
     | { type: 'load_recipe'; recipe: Recipe };
 
@@ -39,6 +40,8 @@ export function formReducer(state: FormState, action: FormAction): FormState {
             return { ...state, ingredients: [...state.ingredients, action.ingredient] };
         case 'remove_ingredient':
             return { ...state, ingredients: state.ingredients.filter((_, i) => i !== action.index) };
+        case 'update_ingredient':
+            return { ...state, ingredients: state.ingredients.map((iq, i) => i === action.index ? action.ingredient : iq) };
         case 'saved':
             return { ...initialState };
         case 'load_recipe':
