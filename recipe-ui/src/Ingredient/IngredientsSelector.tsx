@@ -14,6 +14,7 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
     const quantityFieldRef = useRef<HTMLInputElement>(null);
 
     const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
+    const [selectedUnitId, setSelectedUnitId] = useState<string>("");
     const [quantity, setQuantity] = useState("");
     const [autoFocusIngredients, setautoFocusIngredients] = useState(false);
 
@@ -48,19 +49,25 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
         }
         if(event.key === "Enter") {
             if(selectedResult != null){
-                setSelectedIngredient(ingredientSearchResults[selectedResult]);
-                quantityFieldRef.current?.focus();
+                selectIngredient(ingredientSearchResults[selectedResult]);
             }
         }
     }
 
+    const selectIngredient = (ingredient: Ingredient) => {
+        setSelectedIngredient(ingredient);
+        setSelectedUnitId(ingredient.defaultUnit.id.toString());
+        quantityFieldRef.current?.focus();
+    }
+
     const addIngredientQuantity = () => {
         if (selectedIngredient != null) {
-            addIngredient({id: null, ingredient: selectedIngredient, unit: selectedIngredient.defaultUnit, quantity: Number(quantity)});
+            addIngredient({id: null, ingredient: selectedIngredient, unit: units.getUnit(selectedUnitId), quantity: Number(quantity)});
             setIngredientSearchResults([]);
             setIngredientSearchTerm("");
             setSelectedResultIndex(null);
             setSelectedIngredient(null);
+            setSelectedUnitId("");
             setQuantity("");
         } else {
             setShowNewIngredientModal(true);
@@ -105,9 +112,19 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
                             onChange={(e) => setQuantity(e.target.value)}
                             className="w-14 focus:outline-none text-dark text-right"
                         />
-                        {selectedIngredient?.defaultUnit.abbreviation &&
-                            <span className="text-gray-400 text-sm w-6">{selectedIngredient.defaultUnit.abbreviation}</span>
-                        }
+                        {selectedIngredient && (
+                            <select
+                                value={selectedUnitId}
+                                onChange={(e) => setSelectedUnitId(e.target.value)}
+                                className="text-gray-400 text-sm focus:outline-none bg-transparent cursor-pointer"
+                            >
+                                {units.units.map(unit => (
+                                    <option key={unit.id.toString()} value={unit.id.toString()}>
+                                        {unit.abbreviation || unit.name}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
                     </div>
                     <button
                         onClick={() => addIngredientQuantity()}
@@ -122,7 +139,7 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
                             <div
                                 className={"px-4 py-2 cursor-pointer " + (index === selectedResult ? "bg-mid text-white" : "text-dark hover:bg-gray-50")}
                                 key={ingredient.id}
-                                onClick={() => setSelectedIngredient(ingredient)}
+                                onClick={() => selectIngredient(ingredient)}
                             >{ingredient.name}</div>
                         ))}
                     </div>
