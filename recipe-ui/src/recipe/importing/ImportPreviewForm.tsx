@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MDXEditorMethods } from '@mdxeditor/editor';
 import { RecipeImportDraft, IngredientQuantity, Recipe } from '../../Types';
@@ -42,6 +42,13 @@ function ImportPreviewForm({ draft }: Props) {
     const unresolvedLines = draft.ingredientLines.filter(
         line => line.resolvedIngredient == null
     );
+
+    const [visibleUnresolved, setVisibleUnresolved] = useState<number[]>(
+        () => unresolvedLines.map((_, i) => i)
+    );
+
+    const dismissUnresolvedLine = (idx: number) =>
+        setVisibleUnresolved(prev => prev.filter(i => i !== idx));
 
     useEffect(() => {
         fetchIngredients();
@@ -115,16 +122,32 @@ function ImportPreviewForm({ draft }: Props) {
                     <h2>Ingredients</h2>
                     <IngredientList ingredients={ingredients} />
 
-                    {unresolvedLines.length > 0 && (
-                        <div className="mt-4">
-                            <p className="text-xs font-semibold uppercase tracking-widest text-mid mb-2">
+                    {allIngredients && allIngredients.length > 0 && units && visibleUnresolved.length > 0 && (
+                        <div className="mt-4 flex flex-col gap-4">
+                            <p className="text-xs font-semibold uppercase tracking-widest text-mid">
                                 Unresolved ingredients — add manually:
                             </p>
-                            <ul className="mb-3 text-sm text-gray-500 list-disc list-inside">
-                                {unresolvedLines.map((line, idx) => (
-                                    <li key={idx}>{line.rawText}</li>
-                                ))}
-                            </ul>
+                            {visibleUnresolved.map(idx => (
+                                <div key={idx} className="border border-gray-100 rounded-lg p-3 flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm text-gray-500 italic">
+                                            "{unresolvedLines[idx].rawText}"
+                                        </span>
+                                        <button
+                                            onClick={() => dismissUnresolvedLine(idx)}
+                                            aria-label={`Done with ${unresolvedLines[idx].rawText}`}
+                                            className="text-xs font-semibold uppercase tracking-widest text-mid hover:text-dark transition-colors cursor-pointer"
+                                        >
+                                            Done ✓
+                                        </button>
+                                    </div>
+                                    <IngredientsSelector
+                                        ingredients={allIngredients}
+                                        units={units}
+                                        addIngredient={(iq) => dispatch({ type: 'add_ingredient', ingredient: iq })}
+                                    />
+                                </div>
+                            ))}
                         </div>
                     )}
 

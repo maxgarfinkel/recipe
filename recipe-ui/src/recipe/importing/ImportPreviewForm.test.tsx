@@ -195,7 +195,7 @@ describe('ImportPreviewForm', () => {
 
     it('shows unresolved ingredient hints', () => {
         render(<ImportPreviewForm draft={mockDraft} />, { wrapper: Wrapper });
-        expect(screen.getByText('2 cups milk')).toBeInTheDocument();
+        expect(screen.getByText(/2 cups milk/)).toBeInTheDocument();
     });
 
     it('renders the source attribution link', () => {
@@ -242,5 +242,39 @@ describe('ImportPreviewForm', () => {
         });
 
         expect(screen.getByText(/could not save recipe/i)).toBeInTheDocument();
+    });
+
+    it('each unresolved line renders its own IngredientsSelector', () => {
+        render(<ImportPreviewForm draft={mockDraft} />, { wrapper: Wrapper });
+        // mockDraft has 1 unresolved line → 1 per-hint selector + 1 general = 2
+        expect(screen.getAllByTestId('add-ingredient-btn')).toHaveLength(2);
+    });
+
+    it('clicking Done removes the unresolved hint and its selector', () => {
+        render(<ImportPreviewForm draft={mockDraft} />, { wrapper: Wrapper });
+        fireEvent.click(screen.getByRole('button', { name: /done with 2 cups milk/i }));
+        expect(screen.queryByText(/2 cups milk/)).not.toBeInTheDocument();
+        // only the general selector remains
+        expect(screen.getAllByTestId('add-ingredient-btn')).toHaveLength(1);
+    });
+
+    it('can add multiple ingredients from one unresolved line before dismissing', () => {
+        render(<ImportPreviewForm draft={mockDraft} />, { wrapper: Wrapper });
+        const [hintBtn] = screen.getAllByTestId('add-ingredient-btn');
+        fireEvent.click(hintBtn);
+        fireEvent.click(hintBtn);
+        // ingredient added twice — "sugar" appears twice in the list
+        expect(screen.getAllByText(/sugar/)).toHaveLength(2);
+        // hint is still visible
+        expect(screen.getByText(/2 cups milk/)).toBeInTheDocument();
+        // dismiss
+        fireEvent.click(screen.getByRole('button', { name: /done with 2 cups milk/i }));
+        expect(screen.queryByText(/2 cups milk/)).not.toBeInTheDocument();
+    });
+
+    it('when all unresolved lines are dismissed the unresolved section disappears', () => {
+        render(<ImportPreviewForm draft={mockDraft} />, { wrapper: Wrapper });
+        fireEvent.click(screen.getByRole('button', { name: /done with 2 cups milk/i }));
+        expect(screen.queryByText(/unresolved ingredients/i)).not.toBeInTheDocument();
     });
 });
