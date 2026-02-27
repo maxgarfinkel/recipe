@@ -34,6 +34,7 @@ function ImportPreviewForm({ draft }: Props) {
                 id: null,
                 quantity: line.quantity ?? 0,
                 ingredient: line.resolvedIngredient!,
+                unit: line.resolvedUnit!,
             } as IngredientQuantity)),
     });
 

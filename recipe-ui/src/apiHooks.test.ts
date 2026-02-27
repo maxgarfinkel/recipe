@@ -474,7 +474,7 @@ describe('useUpdateRecipe', () => {
 
 describe('useFetchIngredients', () => {
     const mockIngredients: Ingredient[] =
-        [{id: BigInt(0), name: "boiled carp", unit: {id: BigInt(0), name: "gram", abbreviation: "g", base: null, baseFactor: 0}}];
+        [{id: BigInt(0), name: "boiled carp", defaultUnit: {id: BigInt(0), name: "gram", abbreviation: "g", base: null, baseFactor: 0}}];
 
     beforeEach(() => {
         vi.clearAllMocks();

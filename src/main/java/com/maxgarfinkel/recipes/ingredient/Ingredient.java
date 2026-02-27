@@ -17,11 +17,12 @@ public class Ingredient {
     private String name;
 
     @ManyToOne()
-    @JoinColumn(name = "unit")
+    @JoinColumn(name = "default_unit")
+    @Getter
     @Setter
-    private Unit unit;
+    private Unit defaultUnit;
 
     public IngredientDto toDto() {
-        return new IngredientDto(name, id, unit.toDto());
+        return new IngredientDto(name, id, defaultUnit != null ? defaultUnit.toDto() : null);
     }
 }

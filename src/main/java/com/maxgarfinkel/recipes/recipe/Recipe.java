@@ -1,6 +1,7 @@
 package com.maxgarfinkel.recipes.recipe;
 
 import com.maxgarfinkel.recipes.ingredient.Ingredient;
+import com.maxgarfinkel.recipes.unit.Unit;
 import jakarta.persistence.*;
 import lombok.Setter;
 
@@ -36,22 +37,22 @@ public class Recipe {
 
     public Recipe() {}
 
-    Recipe(RecipeDto recipeDto, List<Ingredient> ingredients) {
+    Recipe(RecipeDto recipeDto, List<Ingredient> ingredients, Map<Long, Unit> unitMap) {
         this.name = recipeDto.getName();
         this.method = recipeDto.getMethod();
         this.servings = recipeDto.getServings();
         this.sourceUrl = recipeDto.getSourceUrl();
-        setAllIngredientQuantities(recipeDto, ingredients);
+        setAllIngredientQuantities(recipeDto, ingredients, unitMap);
     }
 
-    public void update(RecipeDto recipeDto, List<Ingredient> ingredients) {
+    public void update(RecipeDto recipeDto, List<Ingredient> ingredients, Map<Long, Unit> unitMap) {
         this.name = recipeDto.getName();
         this.method = recipeDto.getMethod();
         this.servings = recipeDto.getServings();
-        setAllIngredientQuantities(recipeDto, ingredients);
+        setAllIngredientQuantities(recipeDto, ingredients, unitMap);
     }
 
-    private void setAllIngredientQuantities(RecipeDto recipeDto, List<Ingredient> ingredients) {
+    private void setAllIngredientQuantities(RecipeDto recipeDto, List<Ingredient> ingredients, Map<Long, Unit> unitMap) {
         if(ingredientQuantities != null) {
             this.ingredientQuantities.clear();
         }
@@ -59,18 +60,21 @@ public class Recipe {
                 .collect(Collectors.toMap(Ingredient::getId, Function.identity()));
 
         recipeDto.getIngredientQuantities()
-                .forEach(ingredientQuantity -> {
-                    var i = ingredientMap.get(ingredientQuantity.getIngredient().getId());
-                    this.setIngredientQuantity(i, ingredientQuantity.getQuantity());
+                .forEach(iqDto -> {
+                    var ingredient = ingredientMap.get(iqDto.getIngredient().getId());
+                    Unit unit = iqDto.getUnit() != null
+                            ? unitMap.get(iqDto.getUnit().getId())
+                            : ingredient.getDefaultUnit();
+                    this.setIngredientQuantity(ingredient, unit, iqDto.getQuantity());
                 });
     }
 
-    void setIngredientQuantity(Ingredient ingredient, Double quantity) {
+    void setIngredientQuantity(Ingredient ingredient, Unit unit, Double quantity) {
         if(ingredientQuantities == null) {
             ingredientQuantities = new ArrayList<>();
         }
 
-        ingredientQuantities.add(new IngredientQuantity(this, ingredient, quantity));
+        ingredientQuantities.add(new IngredientQuantity(this, ingredient, unit, quantity));
     }
 
     public RecipeDto toDto() {

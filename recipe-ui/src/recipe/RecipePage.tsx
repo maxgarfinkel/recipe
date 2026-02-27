@@ -108,7 +108,7 @@ function RecipePage() {
                         <ul>
                             {recipe.ingredientQuantities.map((iq) => (
                                 <li key={iq.id}>
-                                    {formatQuantity(iq.quantity * servings / recipe.servings)} {iq.ingredient.unit.abbreviation} {iq.ingredient.name}
+                                    {formatQuantity(iq.quantity * servings / recipe.servings)} {iq.unit.abbreviation} {iq.ingredient.name}
                                 </li>
                             ))}
                         </ul>

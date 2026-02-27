@@ -19,7 +19,7 @@ class RecipeIntegrationTest extends SpringTestBase {
         var ingredient = saveIngredient("basil");
 
         var ingredientQuantityDto = new IngredientQuantityDto(
-                null, 1d, ingredient);
+                null, 1d, ingredient, ingredient.getDefaultUnit());
 
         var recipeDto = new RecipeDto(null,
                 "aRecipe",
@@ -39,7 +39,7 @@ class RecipeIntegrationTest extends SpringTestBase {
         var ingredientQty = recipeDto.getIngredientQuantities().getFirst();
         assertThat(ingredientQty.getQuantity()).isEqualTo(1d);
         assertThat(ingredientQty.getIngredient().getName()).isEqualTo("basil");
-        assertThat(ingredientQty.getIngredient().getUnit().getName()).isEqualTo("Gram");
+        assertThat(ingredientQty.getUnit().getName()).isEqualTo("Gram");
 
         //Read
         var readRecipeDto = restClient.get()
@@ -50,7 +50,7 @@ class RecipeIntegrationTest extends SpringTestBase {
 
         //Update
         var newIngredient = saveIngredient("cheese");
-        var newIngredientQuantityDto = new IngredientQuantityDto(null, 1d, newIngredient);
+        var newIngredientQuantityDto = new IngredientQuantityDto(null, 1d, newIngredient, newIngredient.getDefaultUnit());
         var ingredientQtys = recipeDto.getIngredientQuantities();
         ingredientQtys.add(newIngredientQuantityDto);
         recipeDto = new RecipeDto(recipeDto.getId(),
@@ -84,7 +84,7 @@ class RecipeIntegrationTest extends SpringTestBase {
     @Test
     public void sourceUrlIsPersistedAndPreservedOnUpdate() throws JsonProcessingException {
         var ingredient = saveIngredient("basil");
-        var ingredientQuantityDto = new IngredientQuantityDto(null, 1d, ingredient);
+        var ingredientQuantityDto = new IngredientQuantityDto(null, 1d, ingredient, ingredient.getDefaultUnit());
         var recipeDto = new RecipeDto(null, "sourced recipe", "do stuff", 2,
                 List.of(ingredientQuantityDto), "https://example.com/recipe");
 

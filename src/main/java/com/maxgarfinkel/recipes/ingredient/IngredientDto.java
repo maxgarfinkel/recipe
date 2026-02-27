@@ -8,10 +8,10 @@ public class IngredientDto {
 
     private final String name;
     private final Long id;
-    private final UnitDto unit;
+    private final UnitDto defaultUnit;
 
     public Long getUnitId() {
-        return unit != null ? unit.getId() : null;
+        return defaultUnit != null ? defaultUnit.getId() : null;
     }
 
 }

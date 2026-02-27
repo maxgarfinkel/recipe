@@ -2,6 +2,8 @@ package com.maxgarfinkel.recipes.recipe;
 
 import com.maxgarfinkel.recipes.ingredient.Ingredient;
 import com.maxgarfinkel.recipes.ingredient.IngredientRepository;
+import com.maxgarfinkel.recipes.unit.Unit;
+import com.maxgarfinkel.recipes.unit.UnitRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,9 @@ class RecipeJPATest {
 
     @Autowired
     IngredientRepository ingredientRepository;
+
+    @Autowired
+    UnitRepository unitRepository;
 
     @Autowired
     protected JdbcTemplate jdbcTemplate;
@@ -69,10 +74,12 @@ class RecipeJPATest {
         ingredient.setName("basil");
         ingredient = ingredientRepository.save(ingredient);
 
+        Unit gramUnit = unitRepository.findById(1L).orElseThrow();
+
         Recipe recipe = new Recipe();
         recipe.setName("a recipe");
 
-        recipe.setIngredientQuantity(ingredient, 1d);
+        recipe.setIngredientQuantity(ingredient, gramUnit, 1d);
 
         return recipeRepository.save(recipe);
     }

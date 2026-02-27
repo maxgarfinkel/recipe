@@ -3,11 +3,16 @@ package com.maxgarfinkel.recipes.recipe;
 import com.maxgarfinkel.recipes.ItemNotFound;
 import com.maxgarfinkel.recipes.ingredient.Ingredient;
 import com.maxgarfinkel.recipes.ingredient.IngredientService;
+import com.maxgarfinkel.recipes.unit.Unit;
+import com.maxgarfinkel.recipes.unit.UnitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +20,7 @@ public class RecipeService {
 
     private final RecipeRepository recipeRepository;
     private final IngredientService ingredientService;
+    private final UnitService unitService;
 
     RecipeDto getRecipe(Long id) {
         return recipeRepository.getReferenceById(id).toDto();
@@ -29,11 +35,9 @@ public class RecipeService {
 
     @Transactional
     RecipeDto createRecipe(RecipeDto recipeDto) {
-
         List<Ingredient> ingredients = getIngredients(recipeDto);
-
-        Recipe recipe = new Recipe(recipeDto, ingredients);
-
+        Map<Long, Unit> unitMap = getUnits(recipeDto);
+        Recipe recipe = new Recipe(recipeDto, ingredients, unitMap);
         return recipeRepository.save(recipe).toDto();
     }
 
@@ -46,7 +50,8 @@ public class RecipeService {
                         "Recipe with Id: " + recipeDto.getId() + " not found"));
 
         var ingredients = getIngredients(recipeDto);
-        recipe.update(recipeDto, ingredients);
+        var unitMap = getUnits(recipeDto);
+        recipe.update(recipeDto, ingredients, unitMap);
         if (recipeDto.getSourceUrl() != null) {
             recipe.setSourceUrl(recipeDto.getSourceUrl());
         }
@@ -64,5 +69,16 @@ public class RecipeService {
                 .toList();
 
         return ingredientService.findAllById(ingredientIds);
+    }
+
+    private Map<Long, Unit> getUnits(RecipeDto recipeDto) {
+        List<Long> unitIds = recipeDto.getIngredientQuantities().stream()
+                .filter(iq -> iq.getUnit() != null && iq.getUnit().getId() != null)
+                .map(iq -> iq.getUnit().getId())
+                .distinct()
+                .toList();
+        if (unitIds.isEmpty()) return Map.of();
+        return unitService.findAllById(unitIds).stream()
+                .collect(Collectors.toMap(Unit::getId, Function.identity()));
     }
 }

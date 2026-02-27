@@ -26,7 +26,7 @@ public class IngredientIntegrationTest extends SpringTestBase {
                 .body(IngredientDto.class);
         assertThat(ingredientDto).isNotNull();
         assertThat(ingredientDto.getName()).isEqualTo("basil");
-        assertThat(ingredientDto.getUnit().getName()).isEqualTo("Gram");
+        assertThat(ingredientDto.getDefaultUnit().getName()).isEqualTo("Gram");
 
         //Retrieve
         List<IngredientDto> allIngredients = restClient.get()

@@ -44,8 +44,8 @@ const appleCrumble: Recipe = {
     servings: 4,
     method: '',
     ingredientQuantities: [
-        { id: BigInt(1), quantity: 200, ingredient: { id: BigInt(1), name: 'apple', unit: mockUnit } },
-        { id: BigInt(2), quantity: 100, ingredient: { id: BigInt(2), name: 'flour', unit: mockUnit } },
+        { id: BigInt(1), quantity: 200, unit: mockUnit, ingredient: { id: BigInt(1), name: 'apple', defaultUnit: mockUnit } },
+        { id: BigInt(2), quantity: 100, unit: mockUnit, ingredient: { id: BigInt(2), name: 'flour', defaultUnit: mockUnit } },
     ],
 };
 
@@ -63,7 +63,7 @@ const zucchiniSoup: Recipe = {
     servings: 1,
     method: '',
     ingredientQuantities: [
-        { id: BigInt(3), quantity: 1, ingredient: { id: BigInt(3), name: 'zucchini', unit: mockUnit } },
+        { id: BigInt(3), quantity: 1, unit: mockUnit, ingredient: { id: BigInt(3), name: 'zucchini', defaultUnit: mockUnit } },
     ],
 };
 

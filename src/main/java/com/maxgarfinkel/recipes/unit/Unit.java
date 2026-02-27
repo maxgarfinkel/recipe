@@ -1,11 +1,13 @@
 package com.maxgarfinkel.recipes.unit;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 
 @Entity
 public class Unit {
 
     @Id
+    @Getter
     private Long id;
     private String name;
     private String abbreviation;

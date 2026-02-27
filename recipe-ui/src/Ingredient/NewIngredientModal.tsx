@@ -12,14 +12,11 @@ export interface NewIngredientModalProps {
     ingredientCallback: (ingredient: IngredientQuantity) => void;
 }
 
-function NewIngredientModal({...props}: NewIngredientModalProps) {
-    const closeModal = props.closeModal;
-    const units = props.units;
-
+function NewIngredientModal({ name: initialName, quantity: initialQuantity, units, closeModal, ingredientCallback }: NewIngredientModalProps) {
     const {savedIngredient, saveIngredientError, saveIngredient} = useSaveIngredient();
     const {showToast} = useToast();
-    const [name, setName] = useState(props.name);
-    const [quantity, setQuantity] = useState(props.quantity);
+    const [name, setName] = useState(initialName);
+    const [quantity, setQuantity] = useState(initialQuantity);
     const [selectedUnitId, setSelectedUnitId] = useState(units.getFirst().id.toString());
 
     const inputRef = useRef<HTMLInputElement>(null);
@@ -30,14 +27,15 @@ function NewIngredientModal({...props}: NewIngredientModalProps) {
 
     useEffect(() => {
         if(savedIngredient) {
-            props.ingredientCallback({
+            ingredientCallback({
                 id: null,
                 ingredient: savedIngredient,
+                unit: savedIngredient.defaultUnit,
                 quantity: parseInt(quantity)
             });
             closeModal();
         }
-    }, [savedIngredient]);
+    }, [savedIngredient, ingredientCallback, closeModal, quantity]);
 
     useEffect(() => {
         if (!saveIngredientError) return;
@@ -50,7 +48,7 @@ function NewIngredientModal({...props}: NewIngredientModalProps) {
         saveIngredient({
             id: null,
             name: name,
-            unit: {
+            defaultUnit: {
                 id: unit.id,
                 name: unit.name,
                 abbreviation: unit.abbreviation,

@@ -3,7 +3,7 @@ ALTER SEQUENCE ingredient_seq RESTART WITH 100;
 ALTER SEQUENCE ingredient_quantity_seq RESTART WITH 100;
 ALTER SEQUENCE recipe_seq RESTART WITH 100;
 
-INSERT INTO ingredient(id, name, unit)
+INSERT INTO ingredient(id, name, default_unit)
 VALUES  (1,'Spaghetti', 1),
         (2,'Tinned Tomato', 19),
         (3,'Chopped Onion', 19),
@@ -21,13 +21,13 @@ Combine: Bring a large pot of water to a rolling boil and salt it generously. Dr
 
 Serve: Divide the pasta between bowls and spoon any remaining sauce on top. Sprinkle with Parmigiano cheese and basil and serve.', 4);
 
-INSERT INTO ingredient_quantity(id, quantity, recipe_id, ingredient_id)
-VALUES  (1, 250, 1, 1),
-        (2, 1, 1, 2),
-        (3, 1, 1, 3),
-        (4, 3, 1, 4),
-        (5, 1, 1, 5),
-        (6, 1, 1, 1);
+INSERT INTO ingredient_quantity(id, quantity, recipe_id, ingredient_id, unit_id)
+VALUES  (1, 250, 1, 1, 1),   -- 250g Spaghetti
+        (2, 1,   1, 2, 19),  -- 1 Tinned Tomato
+        (3, 1,   1, 3, 19),  -- 1 Chopped Onion
+        (4, 3,   1, 4, 19),  -- 3 Garlic Cloves
+        (5, 1,   1, 5, 15),  -- 1 Pinch Salt
+        (6, 1,   1, 6, 9);   -- 1 tbsp Capers
 
 INSERT INTO recipe(id, name, method, servings)
 VALUES (2,'Tomato soup', 'step 1
@@ -43,9 +43,9 @@ Remove the pan from the heat, take the lid off and stand back for a few seconds 
 step 6
 Pour the puréed soup back into the pan and reheat it over a medium heat for a few minutes, stirring occasionally until you can see bubbles breaking gently on the surface. Taste a spoonful and add a pinch or two of salt if you think the soup needs it, plus more pepper and sugar if you like. If the colour’s not a deep enough red for you, plop in another teaspoon of tomato purée and stir until it dissolves. Ladle into bowls and serve. Or sieve and serve chilled with some cream swirled in.', 4);
 
-INSERT INTO ingredient_quantity(id, quantity, recipe_id, ingredient_id)
+INSERT INTO ingredient_quantity(id, quantity, recipe_id, ingredient_id, unit_id)
 VALUES
-        (7, 1, 2, 2),
-        (8, 1, 2, 3),
-        (9, 3, 2, 4),
-        (10, 1, 2, 5);
+        (7,  1, 2, 2, 19),  -- 1 Tinned Tomato
+        (8,  1, 2, 3, 19),  -- 1 Chopped Onion
+        (9,  3, 2, 4, 19),  -- 3 Garlic Cloves
+        (10, 1, 2, 5, 15);  -- 1 Pinch Salt

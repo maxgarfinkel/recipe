@@ -26,7 +26,7 @@ public class IngredientService {
         var ingredient = new Ingredient();
         ingredient.setName(ingredientName);
         if(unitId != null) {
-            ingredient.setUnit(unitService.getEntityById(unitId));
+            ingredient.setDefaultUnit(unitService.getEntityById(unitId));
         }
         return ingredientRepository.save(ingredient).toDto();
     }

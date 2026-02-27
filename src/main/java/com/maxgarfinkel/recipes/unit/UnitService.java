@@ -24,4 +24,8 @@ public class UnitService {
                 () ->  new ItemNotFound(unitId, "unit", "Unable to find unit with id: " + unitId)
         );
     }
+
+    public List<Unit> findAllById(List<Long> ids) {
+        return unitRepository.findAllById(ids);
+    }
 }

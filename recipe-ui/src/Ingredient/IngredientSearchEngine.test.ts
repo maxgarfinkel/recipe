@@ -4,12 +4,12 @@ import searchIngredients from "./IngredientSearchEngine.ts";
 
 const gram:JsonUnit = {id:BigInt(1), name:"gram", abbreviation:"g", base:null, baseFactor:1}
 const ingredients:Ingredient[] = [
-    {id:BigInt(0), name:"a", unit:gram},
-    {id:BigInt(1), name:"ab", unit:gram},
-    {id:BigInt(2), name:"b", unit:gram},
-    {id:BigInt(3), name:"ba", unit:gram},
-    {id:BigInt(4), name:"c", unit:gram},
-    {id:BigInt(5), name:"d", unit:gram},
+    {id:BigInt(0), name:"a", defaultUnit:gram},
+    {id:BigInt(1), name:"ab", defaultUnit:gram},
+    {id:BigInt(2), name:"b", defaultUnit:gram},
+    {id:BigInt(3), name:"ba", defaultUnit:gram},
+    {id:BigInt(4), name:"c", defaultUnit:gram},
+    {id:BigInt(5), name:"d", defaultUnit:gram},
 ]
 
 

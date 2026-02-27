@@ -56,7 +56,7 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
 
     const addIngredientQuantity = () => {
         if (selectedIngredient != null) {
-            addIngredient({id: null, ingredient: selectedIngredient, quantity: Number(quantity)});
+            addIngredient({id: null, ingredient: selectedIngredient, unit: selectedIngredient.defaultUnit, quantity: Number(quantity)});
             setIngredientSearchResults([]);
             setIngredientSearchTerm("");
             setSelectedResultIndex(null);
@@ -105,8 +105,8 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
                             onChange={(e) => setQuantity(e.target.value)}
                             className="w-14 focus:outline-none text-dark text-right"
                         />
-                        {selectedIngredient?.unit.abbreviation &&
-                            <span className="text-gray-400 text-sm w-6">{selectedIngredient.unit.abbreviation}</span>
+                        {selectedIngredient?.defaultUnit.abbreviation &&
+                            <span className="text-gray-400 text-sm w-6">{selectedIngredient.defaultUnit.abbreviation}</span>
                         }
                     </div>
                     <button

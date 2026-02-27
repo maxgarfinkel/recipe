@@ -62,10 +62,11 @@ const mockRecipe: Recipe = {
         {
             id: BigInt(10),
             quantity: 200,
+            unit: { id: BigInt(1), name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 },
             ingredient: {
                 id: BigInt(1),
                 name: 'pasta',
-                unit: { id: BigInt(1), name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 },
+                defaultUnit: { id: BigInt(1), name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 },
             },
         },
     ],

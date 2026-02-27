@@ -11,7 +11,7 @@ function IngredientList({ ingredients }: Props) {
         <ul>
             {ingredients.map((iq) => (
                 <li key={String(iq.ingredient.id)}>
-                    {iq.quantity} {iq.ingredient.unit.abbreviation} {iq.ingredient.name}
+                    {iq.quantity} {iq.unit.abbreviation} {iq.ingredient.name}
                 </li>
             ))}
         </ul>

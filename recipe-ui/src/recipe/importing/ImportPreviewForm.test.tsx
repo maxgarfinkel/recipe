@@ -13,10 +13,11 @@ const mockNavigate = vi.hoisted(() => vi.fn());
 const mockSelectorIngredientQty = vi.hoisted(() => ({
     id: null as null,
     quantity: 100,
+    unit: { id: BigInt(1) as bigint, name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 },
     ingredient: {
         id: BigInt(2) as bigint,
         name: 'sugar',
-        unit: { id: BigInt(1) as bigint, name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 },
+        defaultUnit: { id: BigInt(1) as bigint, name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 },
     },
 }));
 
@@ -97,7 +98,7 @@ const mockUnit: Unit = { id: BigInt(1), name: 'gram', abbreviation: 'g', base: n
 const mockIngredient: Ingredient = {
     id: BigInt(1),
     name: 'flour',
-    unit: { id: BigInt(1), name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 },
+    defaultUnit: { id: BigInt(1), name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 },
 };
 const mockUnits = new Units([mockUnit]);
 const mockSaveRecipe = vi.fn();
@@ -105,7 +106,7 @@ const mockSaveRecipe = vi.fn();
 const resolvedIngredient: Ingredient = {
     id: BigInt(1),
     name: 'flour',
-    unit: { id: BigInt(1), name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 },
+    defaultUnit: { id: BigInt(1), name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 },
 };
 
 const mockDraft: RecipeImportDraft = {

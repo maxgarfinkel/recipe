@@ -8,13 +8,14 @@ export interface JsonUnit {
 export interface Ingredient {
     name: string
     id: bigint | null
-    unit: JsonUnit
+    defaultUnit: JsonUnit
 }
 
 export interface IngredientQuantity {
     id: bigint | null
     quantity: number
     ingredient: Ingredient
+    unit: JsonUnit
 }
 export interface Recipe {
     id: bigint | null
