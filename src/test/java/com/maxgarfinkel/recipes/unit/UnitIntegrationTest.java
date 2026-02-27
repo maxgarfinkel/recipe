@@ -19,7 +19,7 @@ class UnitIntegrationTest extends SpringTestBase {
                 .body(new ParameterizedTypeReference<>() {
                 });
 
-        assertThat(allUnits).hasSize(19);
+        assertThat(allUnits).hasSize(23);
         UnitDto gram = new UnitDto(1L, "Gram", "g", null, 1.0);
         UnitDto kilogram = new UnitDto(2L, "Kilogram", "kg", gram, 1000.0);
         assertThat(allUnits).contains(gram, kilogram);
