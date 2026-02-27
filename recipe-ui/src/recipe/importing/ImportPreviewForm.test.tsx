@@ -119,12 +119,16 @@ const mockDraft: RecipeImportDraft = {
         {
             rawText: '200g flour',
             quantity: 200,
+            ingredientNameHint: 'flour',
+            unitNameHint: 'g',
             resolvedIngredient,
             resolvedUnit: { id: BigInt(1), name: 'gram', abbreviation: 'g', base: null, baseFactor: 1 },
         },
         {
             rawText: '2 cups milk', // unresolved
             quantity: 2,
+            ingredientNameHint: 'milk',
+            unitNameHint: 'cups',
             resolvedIngredient: null,
             resolvedUnit: null,
         },

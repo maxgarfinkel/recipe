@@ -29,6 +29,8 @@ export interface Recipe {
 export interface ImportedIngredientLine {
     rawText: string
     quantity: number | null
+    ingredientNameHint: string | null
+    unitNameHint: string | null
     resolvedIngredient: Ingredient | null
     resolvedUnit: JsonUnit | null
 }

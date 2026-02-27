@@ -146,6 +146,9 @@ function ImportPreviewForm({ draft }: Props) {
                                         ingredients={allIngredients}
                                         units={units}
                                         addIngredient={(iq) => dispatch({ type: 'add_ingredient', ingredient: iq })}
+                                        initialSearchTerm={unresolvedLines[idx].ingredientNameHint ?? undefined}
+                                        initialQuantity={unresolvedLines[idx].quantity ?? undefined}
+                                        initialUnitNameHint={unresolvedLines[idx].unitNameHint ?? undefined}
                                     />
                                 </div>
                             ))}

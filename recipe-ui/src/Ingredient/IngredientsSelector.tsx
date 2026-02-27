@@ -8,18 +8,23 @@ export interface IngredientsSelectorProps {
     ingredients: Ingredient[]
     units: Units
     addIngredient: (ingredientQuantity: IngredientQuantity) => void
+    initialSearchTerm?: string
+    initialQuantity?: number
+    initialUnitNameHint?: string
 }
 
-function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSelectorProps) {
+function IngredientsSelector({ingredients, units, addIngredient, initialSearchTerm, initialQuantity, initialUnitNameHint}: IngredientsSelectorProps) {
     const searchInputRef = useRef<HTMLInputElement>(null);
     const quantityFieldRef = useRef<HTMLInputElement>(null);
 
     const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
     const [selectedUnitId, setSelectedUnitId] = useState<string>("");
-    const [quantity, setQuantity] = useState("");
+    const [quantity, setQuantity] = useState(initialQuantity != null ? String(initialQuantity) : "");
 
-    const [ingredientSearchTerm, setIngredientSearchTerm] = useState<string>("");
-    const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
+    const [ingredientSearchTerm, setIngredientSearchTerm] = useState<string>(initialSearchTerm ?? "");
+    const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>(
+        initialSearchTerm ? searchIngredients(initialSearchTerm, ingredients) : []
+    );
     const [selectedResult, setSelectedResultIndex] = useState<number | null>(null);
 
     const [showNewIngredientModal, setShowNewIngredientModal] = useState<boolean>(false);
@@ -56,7 +61,12 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
 
     const selectIngredient = (ingredient: Ingredient) => {
         setSelectedIngredient(ingredient);
-        setSelectedUnitId(ingredient.defaultUnit.id.toString());
+        const hintUnit = initialUnitNameHint
+            ? units.units.find(u =>
+                u.name.toLowerCase() === initialUnitNameHint.toLowerCase() ||
+                u.abbreviation.toLowerCase() === initialUnitNameHint.toLowerCase())
+            : null;
+        setSelectedUnitId((hintUnit ?? ingredient.defaultUnit).id.toString());
         setIngredientSearchResults([]);
         quantityFieldRef.current?.focus();
     }
