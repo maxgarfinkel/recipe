@@ -23,7 +23,7 @@ class RecipeIntegrationTest extends SpringTestBase {
 
         var recipeDto = new RecipeDto(null,
                 "aRecipe",
-                "do some stuff", 1, List.of(ingredientQuantityDto));
+                "do some stuff", 1, List.of(ingredientQuantityDto), null);
 
         recipeDto = restClient.post()
                 .uri("/api/v1/recipe/")
@@ -55,7 +55,7 @@ class RecipeIntegrationTest extends SpringTestBase {
         ingredientQtys.add(newIngredientQuantityDto);
         recipeDto = new RecipeDto(recipeDto.getId(),
                 "updated name", recipeDto.getMethod(), 2,
-                ingredientQtys);
+                ingredientQtys, null);
 
         recipeDto = restClient.put()
                 .uri("/api/v1/recipe/"+recipeDto.getId())
@@ -79,6 +79,36 @@ class RecipeIntegrationTest extends SpringTestBase {
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<RecipeDto>>() {});
         assertThat(recipies).hasSize(0);
+    }
+
+    @Test
+    public void sourceUrlIsPersistedAndPreservedOnUpdate() throws JsonProcessingException {
+        var ingredient = saveIngredient("basil");
+        var ingredientQuantityDto = new IngredientQuantityDto(null, 1d, ingredient);
+        var recipeDto = new RecipeDto(null, "sourced recipe", "do stuff", 2,
+                List.of(ingredientQuantityDto), "https://example.com/recipe");
+
+        recipeDto = restClient.post()
+                .uri("/api/v1/recipe/")
+                .body(objectMapper.writeValueAsString(recipeDto))
+                .retrieve()
+                .body(RecipeDto.class);
+
+        assertThat(recipeDto).isNotNull();
+        assertThat(recipeDto.getSourceUrl()).isEqualTo("https://example.com/recipe");
+
+        // Update without sourceUrl — existing value should be preserved
+        var updateDto = new RecipeDto(recipeDto.getId(), "updated name", recipeDto.getMethod(),
+                recipeDto.getServings(), recipeDto.getIngredientQuantities(), null);
+
+        var updated = restClient.put()
+                .uri("/api/v1/recipe/" + recipeDto.getId())
+                .body(objectMapper.writeValueAsString(updateDto))
+                .retrieve()
+                .body(RecipeDto.class);
+
+        assertThat(updated).isNotNull();
+        assertThat(updated.getSourceUrl()).isEqualTo("https://example.com/recipe");
     }
 
     private IngredientDto saveIngredient(String name) throws JsonProcessingException {

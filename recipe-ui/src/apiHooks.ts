@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Ingredient, Recipe, JsonUnit } from "./Types.ts";
+import { Ingredient, Recipe, JsonUnit, RecipeImportDraft } from "./Types.ts";
 import { Units } from "./Unit/Units.ts";
 import { Unit } from "./Unit/Unit.ts";
 import api from "./api.ts";
@@ -87,4 +87,14 @@ export function useSaveIngredient() {
     }, [execute]);
 
     return { savedIngredient, saveIngredientError, saveIngredientLoading, saveIngredient };
+}
+
+export function useImportRecipe() {
+    const { data: importDraft, error, loading, execute } = useAsync<RecipeImportDraft>();
+
+    const importRecipe = useCallback((url: string) =>
+        execute(() => api.post<RecipeImportDraft>('recipe/import/preview', { url }).then(r => r.data))
+    , [execute]);
+
+    return { importDraft, error, loading, importRecipe };
 }

@@ -6,6 +6,7 @@ import Header from "./Header.tsx";
 import RecipeEditorPage from "./recipe/RecipeEditorPage.tsx";
 import RecipeMenu from "./recipe/RecipeMenu.tsx";
 import RecipePage from "./recipe/RecipePage.tsx";
+import ImportRecipePage from "./recipe/importing/ImportRecipePage.tsx";
 import {ToastProvider} from "./context/ToastContext.tsx";
 
 createRoot(document.getElementById('root')!).render(
@@ -20,6 +21,7 @@ createRoot(document.getElementById('root')!).render(
                     <Route path='/recipe/:id/edit' element={<RecipeEditorPage />}/>
                     <Route path='/manage-ingredients' element={<div>manage ingredients</div>}/>
                     <Route path='/recipe/:id' element={<RecipePage />}/>
+                    <Route path='/import-recipe' element={<ImportRecipePage />}/>
                 </Routes>
               </div>
           </ToastProvider>

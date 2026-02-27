@@ -11,5 +11,6 @@ public class RecipeDto {
     private final String method;
     private final Integer servings;
     private final List<IngredientQuantityDto> ingredientQuantities;
+    private final String sourceUrl;
 
 }

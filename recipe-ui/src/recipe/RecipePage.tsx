@@ -118,6 +118,12 @@ function RecipePage() {
                         <h2>Method</h2>
                         <Markdown>{recipe.method}</Markdown>
                     </div>
+
+                    {recipe.sourceUrl && (
+                        <div className="text-xs text-mid">
+                            Source: <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-dark">{recipe.sourceUrl}</a>
+                        </div>
+                    )}
                 </div>
             }
             {recipe && showDeleteModal && (

@@ -33,6 +33,9 @@ function Header() {
                                 <li className="pb-2">
                                     <Link onClick={() => {setShowMenu(!showMenu)}} to={`/new-recipe`}>Add recipe</Link>
                                 </li>
+                                <li className="pb-2">
+                                    <Link onClick={() => {setShowMenu(!showMenu)}} to={`/import-recipe`}>Import recipe</Link>
+                                </li>
                                 <li>
                                     <Link onClick={() => {setShowMenu(!showMenu)}} to={`/manage-ingredients`}>Manage ingredients</Link>
                                 </li>

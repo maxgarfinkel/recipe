@@ -3,3 +3,5 @@ spring:
     username: myuser
     password: secret
     url: jdbc:postgresql://localhost:5432/mydatabase
+
+# anthropic.api-key: <your-key>

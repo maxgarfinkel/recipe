@@ -226,4 +226,18 @@ describe('RecipePage', () => {
 
         expect(screen.queryByText('Delete Recipe')).not.toBeInTheDocument();
     });
+
+    it('renders a source attribution link when sourceUrl is present', () => {
+        setupHooks({ recipe: { ...mockRecipe, sourceUrl: 'https://example.com/recipe' } });
+        render(<RecipePage />, { wrapper: Wrapper });
+        const link = screen.getByRole('link', { name: /example\.com\/recipe/ });
+        expect(link).toBeInTheDocument();
+        expect(link).toHaveAttribute('href', 'https://example.com/recipe');
+    });
+
+    it('renders no source attribution when sourceUrl is absent', () => {
+        setupHooks({ recipe: mockRecipe });
+        render(<RecipePage />, { wrapper: Wrapper });
+        expect(screen.queryByText(/source:/i)).not.toBeInTheDocument();
+    });
 });

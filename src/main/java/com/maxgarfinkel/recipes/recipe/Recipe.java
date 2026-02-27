@@ -30,12 +30,17 @@ public class Recipe {
 
     private Integer servings;
 
+    @Setter
+    @Column(name = "source_url", length = 2048)
+    private String sourceUrl;
+
     public Recipe() {}
 
     Recipe(RecipeDto recipeDto, List<Ingredient> ingredients) {
         this.name = recipeDto.getName();
         this.method = recipeDto.getMethod();
         this.servings = recipeDto.getServings();
+        this.sourceUrl = recipeDto.getSourceUrl();
         setAllIngredientQuantities(recipeDto, ingredients);
     }
 
@@ -71,6 +76,6 @@ public class Recipe {
     public RecipeDto toDto() {
         List<IngredientQuantityDto> quantityDtos = ingredientQuantities.stream()
                 .map(IngredientQuantity::toDto).toList();
-        return new RecipeDto(id, name, method, servings, quantityDtos);
+        return new RecipeDto(id, name, method, servings, quantityDtos, sourceUrl);
     }
 }

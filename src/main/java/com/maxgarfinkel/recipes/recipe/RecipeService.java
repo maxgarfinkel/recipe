@@ -47,6 +47,9 @@ public class RecipeService {
 
         var ingredients = getIngredients(recipeDto);
         recipe.update(recipeDto, ingredients);
+        if (recipeDto.getSourceUrl() != null) {
+            recipe.setSourceUrl(recipeDto.getSourceUrl());
+        }
         return recipeRepository.save(recipe).toDto();
     }
 

@@ -22,4 +22,21 @@ export interface Recipe {
     method: string
     servings: number
     ingredientQuantities: IngredientQuantity[]
+    sourceUrl?: string
+}
+
+export interface ImportedIngredientLine {
+    rawText: string
+    quantity: number | null
+    resolvedIngredient: Ingredient | null
+    resolvedUnit: JsonUnit | null
+}
+
+export interface RecipeImportDraft {
+    name: string
+    servings: number | null
+    method: string
+    sourceUrl: string
+    extractionSource: 'SCHEMA_ORG' | 'LLM'
+    ingredientLines: ImportedIngredientLine[]
 }
