@@ -82,8 +82,13 @@ public class SchemaOrgExtractor implements RecipeExtractor {
         JsonNode ingredients = node.path("recipeIngredient");
         if (ingredients.isArray()) {
             for (JsonNode ingredient : ingredients) {
+                String rawText = ingredient.asText();
+                IngredientLineParser.ParsedLine parsed = IngredientLineParser.parse(rawText);
                 RecipeImportDraft.ImportedIngredientLine line = new RecipeImportDraft.ImportedIngredientLine();
-                line.setRawText(ingredient.asText());
+                line.setRawText(rawText);
+                line.setQuantity(parsed.quantity());
+                line.setUnitNameHint(parsed.unitNameHint());
+                line.setIngredientNameHint(parsed.ingredientNameHint());
                 lines.add(line);
             }
         }

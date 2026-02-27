@@ -134,6 +134,58 @@ class SchemaOrgExtractorTest {
     }
 
     @Test
+    void ingredientLines_parsedHintsPopulated() {
+        String html = htmlWithJsonLd("""
+                {
+                  "@type": "Recipe",
+                  "name": "Cake",
+                  "recipeIngredient": ["200g plain flour", "2 cups sugar", "salt to taste"],
+                  "recipeInstructions": []
+                }
+                """);
+
+        var result = extractor.extract(html, "https://example.com");
+
+        assertThat(result).isPresent();
+        var lines = result.get().getIngredientLines();
+
+        // "200g plain flour" — glued quantity+unit
+        assertThat(lines.getFirst().getQuantity()).isEqualTo(200.0);
+        assertThat(lines.getFirst().getUnitNameHint()).isEqualTo("g");
+        assertThat(lines.getFirst().getIngredientNameHint()).isEqualTo("plain flour");
+
+        // "2 cups sugar" — space-separated, plural canonicalised
+        assertThat(lines.get(1).getQuantity()).isEqualTo(2.0);
+        assertThat(lines.get(1).getUnitNameHint()).isEqualTo("cup");
+        assertThat(lines.get(1).getIngredientNameHint()).isEqualTo("sugar");
+
+        // "salt to taste" — no quantity, entire text becomes name hint
+        assertThat(lines.get(2).getQuantity()).isNull();
+        assertThat(lines.get(2).getUnitNameHint()).isNull();
+        assertThat(lines.get(2).getIngredientNameHint()).isEqualTo("salt to taste");
+    }
+
+    @Test
+    void ingredientLine_fractionQuantity_parsedCorrectly() {
+        String html = htmlWithJsonLd("""
+                {
+                  "@type": "Recipe",
+                  "name": "Soup",
+                  "recipeIngredient": ["1/2 tsp black pepper"],
+                  "recipeInstructions": []
+                }
+                """);
+
+        var result = extractor.extract(html, "https://example.com");
+
+        assertThat(result).isPresent();
+        var line = result.get().getIngredientLines().getFirst();
+        assertThat(line.getQuantity()).isCloseTo(0.5, org.assertj.core.data.Offset.offset(0.001));
+        assertThat(line.getUnitNameHint()).isEqualTo("tsp");
+        assertThat(line.getIngredientNameHint()).isEqualTo("black pepper");
+    }
+
+    @Test
     void noJsonLdPresent_returnsEmpty() {
         String html = "<html><body><p>No structured data here</p></body></html>";
 

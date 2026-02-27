@@ -129,26 +129,4 @@ class ImportServiceTest {
         assertThat(result.getIngredientLines().getFirst().getResolvedIngredient()).isNull();
     }
 
-    @Test
-    void schemaOrgPath_attemptsRegexParseOfRawText() {
-        // No hints — raw text only (schema.org path)
-        RecipeImportDraft draft = new RecipeImportDraft();
-        draft.setName("Test");
-        List<RecipeImportDraft.ImportedIngredientLine> lines = new ArrayList<>();
-        RecipeImportDraft.ImportedIngredientLine line = new RecipeImportDraft.ImportedIngredientLine();
-        line.setRawText("100 g flour");
-        lines.add(line);
-        draft.setIngredientLines(lines);
-
-        when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
-
-        var result = importService.importFromUrl("https://example.com");
-        var resultLine = result.getIngredientLines().getFirst();
-
-        assertThat(resultLine.getQuantity()).isEqualTo(100.0);
-        assertThat(resultLine.getUnitNameHint()).isEqualTo("g");
-        assertThat(resultLine.getIngredientNameHint()).isEqualTo("flour");
-        assertThat(resultLine.getResolvedUnit()).isEqualTo(gramUnit);
-        assertThat(resultLine.getResolvedIngredient()).isEqualTo(flourIngredient);
-    }
 }

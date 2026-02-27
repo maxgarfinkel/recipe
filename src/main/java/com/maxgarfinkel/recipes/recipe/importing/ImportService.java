@@ -8,15 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 public class ImportService {
-
-    private static final Pattern INGREDIENT_PATTERN =
-            Pattern.compile("^(\\d+\\.?\\d*)\\s+(\\w+)\\s+(.+)$");
 
     private final UrlFetcher urlFetcher;
     private final CompositeRecipeExtractor recipeExtractor;
@@ -38,29 +33,12 @@ public class ImportService {
         if (draft.getIngredientLines() == null) return;
 
         for (RecipeImportDraft.ImportedIngredientLine line : draft.getIngredientLines()) {
-            // For schema.org path where no hints were extracted, try regex parse of rawText
-            if (line.getUnitNameHint() == null && line.getIngredientNameHint() == null
-                    && line.getRawText() != null) {
-                tryParseRawText(line);
-            }
-
             if (line.getUnitNameHint() != null) {
                 line.setResolvedUnit(resolveUnit(line.getUnitNameHint(), allUnits));
             }
             if (line.getIngredientNameHint() != null) {
                 line.setResolvedIngredient(resolveIngredient(line.getIngredientNameHint(), allIngredients));
             }
-        }
-    }
-
-    private void tryParseRawText(RecipeImportDraft.ImportedIngredientLine line) {
-        Matcher matcher = INGREDIENT_PATTERN.matcher(line.getRawText().trim());
-        if (matcher.matches()) {
-            try {
-                line.setQuantity(Double.parseDouble(matcher.group(1)));
-            } catch (NumberFormatException ignored) {}
-            line.setUnitNameHint(matcher.group(2));
-            line.setIngredientNameHint(matcher.group(3));
         }
     }
 
