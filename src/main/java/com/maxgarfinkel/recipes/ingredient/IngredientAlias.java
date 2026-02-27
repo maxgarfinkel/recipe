@@ -30,4 +30,8 @@ public class IngredientAlias {
     @Getter
     @Setter
     private Unit unit;
+
+    public IngredientAliasResponseDto toDto() {
+        return new IngredientAliasResponseDto(id, aliasText, ingredient.getId(), unit.getId());
+    }
 }

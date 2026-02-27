@@ -16,4 +16,10 @@ public class IngredientAliasController {
     void save(@RequestBody IngredientAliasDto dto) {
         ingredientAliasService.save(dto.getAliasText(), dto.getIngredientId(), dto.getUnitId());
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void delete(@PathVariable Long id) {
+        ingredientAliasService.delete(id);
+    }
 }

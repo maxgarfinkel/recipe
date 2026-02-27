@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Ingredient, Recipe, JsonUnit, RecipeImportDraft } from "./Types.ts";
+import { Ingredient, IngredientAlias, PageResponse, Recipe, JsonUnit, RecipeImportDraft } from "./Types.ts";
 import { Units } from "./Unit/Units.ts";
 import { Unit } from "./Unit/Unit.ts";
 import api from "./api.ts";
@@ -97,6 +97,52 @@ export function useImportRecipe() {
     , [execute]);
 
     return { importDraft, error, loading, importRecipe };
+}
+
+export function useFetchIngredientPage() {
+    const { data: ingredientPage, error, loading, execute } = useAsync<PageResponse<Ingredient>>();
+
+    const fetchIngredientPage = useCallback((page: number, size: number) => {
+        execute(() =>
+            api.get<PageResponse<Ingredient>>(`ingredient/page?page=${page}&size=${size}`).then(r => r.data)
+        );
+    }, [execute]);
+
+    return { ingredientPage, loading, error, fetchIngredientPage };
+}
+
+export function useUpdateIngredient() {
+    const { data: updatedIngredient, error, loading, execute } = useAsync<Ingredient>();
+
+    const updateIngredient = useCallback((ingredient: Ingredient) => {
+        return execute(() =>
+            api.put<Ingredient>(`ingredient/${ingredient.id}`, ingredient).then(r => r.data)
+        );
+    }, [execute]);
+
+    return { updatedIngredient, loading, error, updateIngredient };
+}
+
+export function useFetchIngredientAliases() {
+    const { data: aliases, error: aliasError, loading: aliasLoading, execute } = useAsync<IngredientAlias[]>();
+
+    const fetchAliases = useCallback((ingredientId: bigint) => {
+        execute(() =>
+            api.get<IngredientAlias[]>(`ingredient/${ingredientId}/alias`).then(r => r.data)
+        );
+    }, [execute]);
+
+    return { aliases, aliasError, aliasLoading, fetchAliases };
+}
+
+export function useDeleteIngredientAlias() {
+    const { data: deleted, error, loading, execute } = useAsync<boolean>();
+
+    const deleteAlias = useCallback((id: bigint) => {
+        return execute(() => api.delete(`ingredient-alias/${id}`).then(() => true));
+    }, [execute]);
+
+    return { deleted, loading, error, deleteAlias };
 }
 
 export function useSaveIngredientAlias() {

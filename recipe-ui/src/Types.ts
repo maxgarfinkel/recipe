@@ -43,3 +43,18 @@ export interface RecipeImportDraft {
     extractionSource: 'SCHEMA_ORG' | 'LLM'
     ingredientLines: ImportedIngredientLine[]
 }
+
+export interface IngredientAlias {
+    id: bigint
+    aliasText: string
+    ingredientId: bigint
+    unitId: bigint
+}
+
+export interface PageResponse<T> {
+    content: T[]
+    page: number
+    size: number
+    totalElements: number
+    totalPages: number
+}

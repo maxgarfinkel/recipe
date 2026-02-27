@@ -28,7 +28,8 @@ public class SpringTestBase {
     @BeforeEach
     public void beforeEach() {
         restClient = restClient.mutate().baseUrl("http://localhost:" + port + "/").build();
-        jdbcTemplate.execute("TRUNCATE TABLE ingredient, ingredient_quantity, recipe");
+        jdbcTemplate.execute("TRUNCATE TABLE ingredient_alias, ingredient, ingredient_quantity, recipe");
+        jdbcTemplate.execute("ALTER SEQUENCE ingredient_alias_id_seq RESTART WITH 1");
         jdbcTemplate.execute("ALTER SEQUENCE ingredient_seq RESTART WITH 1");
         jdbcTemplate.execute("ALTER SEQUENCE ingredient_quantity_seq RESTART WITH 1");
         jdbcTemplate.execute("ALTER SEQUENCE recipe_seq RESTART WITH 1");

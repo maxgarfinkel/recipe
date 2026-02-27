@@ -24,7 +24,8 @@ function Header() {
                         </div>
                     </div>
 
-                    <div className={"bg-dark overflow-clip transition-[max-height] ease-in-out duration-700 " + (showMenu ? "max-h-32" : "max-h-0") + " ..."}>
+                    <div className={"bg-dark grid transition-[grid-template-rows] ease-in-out duration-700 " + (showMenu ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+                        <div className="overflow-hidden">
                         <div className="md:container mx-auto text-right text-white font-sans font-light">
                             <ul className="p-2">
                                 <li className="pb-2">
@@ -40,6 +41,7 @@ function Header() {
                                     <Link onClick={() => {setShowMenu(!showMenu)}} to={`/manage-ingredients`}>Manage ingredients</Link>
                                 </li>
                             </ul>
+                        </div>
                         </div>
                     </div>
 

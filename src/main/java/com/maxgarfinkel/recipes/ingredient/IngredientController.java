@@ -1,5 +1,6 @@
 package com.maxgarfinkel.recipes.ingredient;
 
+import com.maxgarfinkel.recipes.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,10 +12,17 @@ import java.util.List;
 public class IngredientController {
 
     private final IngredientService ingredientService;
+    private final IngredientAliasService ingredientAliasService;
 
     @GetMapping("/")
     List<IngredientDto> all() {
         return ingredientService.getAllAsDto();
+    }
+
+    @GetMapping("/page")
+    PageResponse<IngredientDto> page(@RequestParam(defaultValue = "0") int page,
+                                     @RequestParam(defaultValue = "20") int size) {
+        return ingredientService.getPageAsDto(page, size);
     }
 
     @PostMapping("/")
@@ -25,7 +33,12 @@ public class IngredientController {
 
     @PutMapping("/{id}")
     IngredientDto update(@PathVariable Long id, @RequestBody IngredientDto ingredientDto) {
-        return ingredientService.update(id, ingredientDto.getName());
+        return ingredientService.update(id, ingredientDto.getName(), ingredientDto.getUnitId());
+    }
+
+    @GetMapping("/{id}/alias")
+    List<IngredientAliasResponseDto> aliases(@PathVariable Long id) {
+        return ingredientAliasService.findByIngredientId(id);
     }
 
     @DeleteMapping("/{id}")
@@ -33,4 +46,3 @@ public class IngredientController {
         ingredientService.delete(id);
     }
 }
-

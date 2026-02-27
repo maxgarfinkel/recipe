@@ -1,5 +1,6 @@
 package com.maxgarfinkel.recipes.recipe.importing;
 
+import com.maxgarfinkel.recipes.ingredient.IngredientAliasService;
 import com.maxgarfinkel.recipes.ingredient.IngredientDto;
 import com.maxgarfinkel.recipes.ingredient.IngredientService;
 import com.maxgarfinkel.recipes.unit.UnitDto;
@@ -31,11 +32,13 @@ class ImportServiceTest {
         recipeExtractor = mock(CompositeRecipeExtractor.class);
         UnitService unitService = mock(UnitService.class);
         IngredientService ingredientService = mock(IngredientService.class);
-        importService = new ImportService(urlFetcher, recipeExtractor, unitService, ingredientService);
+        IngredientAliasService ingredientAliasService = mock(IngredientAliasService.class);
+        importService = new ImportService(urlFetcher, recipeExtractor, unitService, ingredientService, ingredientAliasService);
 
         when(urlFetcher.fetch(anyString())).thenReturn("<html/>");
         when(unitService.getUnitsAsDtos()).thenReturn(List.of(gramUnit, cupUnit));
         when(ingredientService.getAllAsDto()).thenReturn(List.of(flourIngredient));
+        when(ingredientAliasService.findAll()).thenReturn(List.of());
     }
 
     private RecipeImportDraft draftWithLine(String rawText, Double quantity, String unitHint, String ingredientHint) {
