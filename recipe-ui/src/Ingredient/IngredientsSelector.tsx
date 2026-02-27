@@ -57,6 +57,7 @@ function IngredientsSelector({ingredients, units, addIngredient}: IngredientsSel
     const selectIngredient = (ingredient: Ingredient) => {
         setSelectedIngredient(ingredient);
         setSelectedUnitId(ingredient.defaultUnit.id.toString());
+        setIngredientSearchResults([]);
         quantityFieldRef.current?.focus();
     }
 
