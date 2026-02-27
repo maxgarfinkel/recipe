@@ -1,4 +1,4 @@
-TRUNCATE TABLE ingredient, ingredient_quantity, recipe;
+TRUNCATE TABLE ingredient, ingredient_quantity, recipe, ingredient_alias;
 ALTER SEQUENCE ingredient_seq RESTART WITH 100;
 ALTER SEQUENCE ingredient_quantity_seq RESTART WITH 100;
 ALTER SEQUENCE recipe_seq RESTART WITH 100;

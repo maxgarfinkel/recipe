@@ -98,3 +98,16 @@ export function useImportRecipe() {
 
     return { importDraft, error, loading, importRecipe };
 }
+
+export function useSaveIngredientAlias() {
+    const { execute } = useAsync<void>();
+
+    const saveIngredientAlias = useCallback((aliasText: string, ingredientId: bigint, unitId: bigint) => {
+        return execute(() =>
+            api.post('ingredient-alias/', { aliasText, ingredientId: ingredientId.toString(), unitId: unitId.toString() })
+                .then(() => undefined)
+        );
+    }, [execute]);
+
+    return { saveIngredientAlias };
+}

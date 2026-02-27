@@ -65,6 +65,7 @@ vi.mock('../../apiHooks', () => ({
     useFetchIngredients: vi.fn(),
     useFetchUnits: vi.fn(),
     useSaveRecipe: vi.fn(),
+    useSaveIngredientAlias: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -72,7 +73,7 @@ vi.mock('../../apiHooks', () => ({
 // ---------------------------------------------------------------------------
 
 import ImportPreviewForm from './ImportPreviewForm';
-import { useFetchIngredients, useFetchUnits, useSaveRecipe } from '../../apiHooks';
+import { useFetchIngredients, useFetchUnits, useSaveRecipe, useSaveIngredientAlias } from '../../apiHooks';
 import { ToastProvider } from '../../context/ToastContext';
 import { Unit } from '../../Unit/Unit';
 import { Units } from '../../Unit/Units';
@@ -161,6 +162,9 @@ function setupHooks({
         error: saveError,
         loading: saving,
         saveRecipe: mockSaveRecipe,
+    });
+    vi.mocked(useSaveIngredientAlias).mockReturnValue({
+        saveIngredientAlias: vi.fn(),
     });
 }
 

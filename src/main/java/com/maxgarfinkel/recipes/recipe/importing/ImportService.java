@@ -1,5 +1,7 @@
 package com.maxgarfinkel.recipes.recipe.importing;
 
+import com.maxgarfinkel.recipes.ingredient.IngredientAlias;
+import com.maxgarfinkel.recipes.ingredient.IngredientAliasService;
 import com.maxgarfinkel.recipes.ingredient.IngredientDto;
 import com.maxgarfinkel.recipes.ingredient.IngredientService;
 import com.maxgarfinkel.recipes.unit.UnitDto;
@@ -17,6 +19,7 @@ public class ImportService {
     private final CompositeRecipeExtractor recipeExtractor;
     private final UnitService unitService;
     private final IngredientService ingredientService;
+    private final IngredientAliasService ingredientAliasService;
 
     public RecipeImportDraft importFromUrl(String url) {
         String html = urlFetcher.fetch(url);
@@ -29,6 +32,7 @@ public class ImportService {
     private void resolveEntities(RecipeImportDraft draft) {
         List<UnitDto> allUnits = unitService.getUnitsAsDtos();
         List<IngredientDto> allIngredients = ingredientService.getAllAsDto();
+        List<IngredientAlias> allAliases = ingredientAliasService.findAll();
 
         if (draft.getIngredientLines() == null) return;
 
@@ -38,6 +42,14 @@ public class ImportService {
 
             UnitDto resolvedUnit = resolveUnit(line.getUnitNameHint(), allUnits);
             IngredientDto resolvedIngredient = resolveIngredient(line.getIngredientNameHint(), allIngredients);
+
+            if (resolvedUnit == null || resolvedIngredient == null) {
+                IngredientAlias alias = resolveAlias(line.getIngredientNameHint(), allAliases);
+                if (alias != null) {
+                    resolvedIngredient = alias.getIngredient().toDto();
+                    resolvedUnit = alias.getUnit().toDto();
+                }
+            }
 
             if (resolvedUnit != null && resolvedIngredient != null) {
                 line.setResolvedUnit(resolvedUnit);
@@ -58,6 +70,14 @@ public class ImportService {
     private IngredientDto resolveIngredient(String hint, List<IngredientDto> allIngredients) {
         return allIngredients.stream()
                 .filter(i -> i.getName().equalsIgnoreCase(hint))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private IngredientAlias resolveAlias(String hint, List<IngredientAlias> allAliases) {
+        String normalised = IngredientAliasService.normalise(hint);
+        return allAliases.stream()
+                .filter(a -> a.getAliasText().equals(normalised))
                 .findFirst()
                 .orElse(null);
     }

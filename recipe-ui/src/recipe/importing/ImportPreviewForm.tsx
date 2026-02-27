@@ -2,7 +2,7 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MDXEditorMethods } from '@mdxeditor/editor';
 import { RecipeImportDraft, IngredientQuantity, Recipe } from '../../Types';
-import { useFetchIngredients, useFetchUnits, useSaveRecipe } from '../../apiHooks';
+import { useFetchIngredients, useFetchUnits, useSaveRecipe, useSaveIngredientAlias } from '../../apiHooks';
 import { formReducer, initialState } from '../recipeFormReducer';
 import MethodEditor from '../MethodEditor';
 import IngredientList from '../IngredientList';
@@ -21,6 +21,7 @@ function ImportPreviewForm({ draft }: Props) {
     const { allIngredients, fetchIngredients } = useFetchIngredients();
     const { units, fetchUnits } = useFetchUnits();
     const { savedRecipe, error: saveError, loading: saving, saveRecipe } = useSaveRecipe();
+    const { saveIngredientAlias } = useSaveIngredientAlias();
 
     const [state, dispatch] = useReducer(formReducer, {
         ...initialState,
@@ -150,7 +151,13 @@ function ImportPreviewForm({ draft }: Props) {
                                     <IngredientsSelector
                                         ingredients={allIngredients}
                                         units={units}
-                                        addIngredient={(iq) => dispatch({ type: 'add_ingredient', ingredient: iq })}
+                                        addIngredient={(iq) => {
+                                            dispatch({ type: 'add_ingredient', ingredient: iq });
+                                            const hint = unresolvedLines[idx].ingredientNameHint;
+                                            if (hint && iq.ingredient.id != null) {
+                                                saveIngredientAlias(hint, iq.ingredient.id, iq.unit.id);
+                                            }
+                                        }}
                                         initialSearchTerm={unresolvedLines[idx].ingredientNameHint ?? undefined}
                                         initialQuantity={unresolvedLines[idx].quantity ?? undefined}
                                         initialUnitNameHint={unresolvedLines[idx].unitNameHint ?? undefined}
