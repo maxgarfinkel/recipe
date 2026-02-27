@@ -33,11 +33,15 @@ public class ImportService {
         if (draft.getIngredientLines() == null) return;
 
         for (RecipeImportDraft.ImportedIngredientLine line : draft.getIngredientLines()) {
-            if (line.getUnitNameHint() != null) {
-                line.setResolvedUnit(resolveUnit(line.getUnitNameHint(), allUnits));
-            }
-            if (line.getIngredientNameHint() != null) {
-                line.setResolvedIngredient(resolveIngredient(line.getIngredientNameHint(), allIngredients));
+            if (line.getQuantity() == null) continue;
+            if (line.getUnitNameHint() == null || line.getIngredientNameHint() == null) continue;
+
+            UnitDto resolvedUnit = resolveUnit(line.getUnitNameHint(), allUnits);
+            IngredientDto resolvedIngredient = resolveIngredient(line.getIngredientNameHint(), allIngredients);
+
+            if (resolvedUnit != null && resolvedIngredient != null) {
+                line.setResolvedUnit(resolvedUnit);
+                line.setResolvedIngredient(resolvedIngredient);
             }
         }
     }

@@ -38,12 +38,13 @@ class ImportServiceTest {
         when(ingredientService.getAllAsDto()).thenReturn(List.of(flourIngredient));
     }
 
-    private RecipeImportDraft draftWithLine(String rawText, String unitHint, String ingredientHint) {
+    private RecipeImportDraft draftWithLine(String rawText, Double quantity, String unitHint, String ingredientHint) {
         RecipeImportDraft draft = new RecipeImportDraft();
         draft.setName("Test");
         List<RecipeImportDraft.ImportedIngredientLine> lines = new ArrayList<>();
         RecipeImportDraft.ImportedIngredientLine line = new RecipeImportDraft.ImportedIngredientLine();
         line.setRawText(rawText);
+        line.setQuantity(quantity);
         line.setUnitNameHint(unitHint);
         line.setIngredientNameHint(ingredientHint);
         lines.add(line);
@@ -61,7 +62,7 @@ class ImportServiceTest {
 
     @Test
     void resolvesUnitByName() {
-        var draft = draftWithLine("100 Gram flour", "Gram", "flour");
+        var draft = draftWithLine("100 Gram flour", 100.0, "Gram", "flour");
         when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
 
         var result = importService.importFromUrl("https://example.com");
@@ -71,7 +72,7 @@ class ImportServiceTest {
 
     @Test
     void resolvesUnitByAbbreviation() {
-        var draft = draftWithLine("100 g flour", "g", "flour");
+        var draft = draftWithLine("100 g flour", 100.0, "g", "flour");
         when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
 
         var result = importService.importFromUrl("https://example.com");
@@ -81,7 +82,7 @@ class ImportServiceTest {
 
     @Test
     void resolvesUnitCaseInsensitive() {
-        var draft = draftWithLine("1 cup flour", "CUP", "flour");
+        var draft = draftWithLine("1 cup flour", 1.0, "CUP", "flour");
         when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
 
         var result = importService.importFromUrl("https://example.com");
@@ -91,7 +92,7 @@ class ImportServiceTest {
 
     @Test
     void resolvesIngredientByName() {
-        var draft = draftWithLine("100g flour", "g", "flour");
+        var draft = draftWithLine("100g flour", 100.0, "g", "flour");
         when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
 
         var result = importService.importFromUrl("https://example.com");
@@ -101,7 +102,7 @@ class ImportServiceTest {
 
     @Test
     void resolvesIngredientCaseInsensitive() {
-        var draft = draftWithLine("100g FLOUR", "g", "FLOUR");
+        var draft = draftWithLine("100g FLOUR", 100.0, "g", "FLOUR");
         when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
 
         var result = importService.importFromUrl("https://example.com");
@@ -110,23 +111,39 @@ class ImportServiceTest {
     }
 
     @Test
-    void noMatchForUnit_leavesResolvedUnitNull() {
-        var draft = draftWithLine("100 tablespoon flour", "tablespoon", "flour");
+    void noMatchForUnit_leavesLineUnresolved() {
+        var draft = draftWithLine("100 tablespoon flour", 100.0, "tablespoon", "flour");
         when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
 
         var result = importService.importFromUrl("https://example.com");
+        var line = result.getIngredientLines().getFirst();
 
-        assertThat(result.getIngredientLines().getFirst().getResolvedUnit()).isNull();
+        assertThat(line.getResolvedUnit()).isNull();
+        assertThat(line.getResolvedIngredient()).isNull();
     }
 
     @Test
-    void noMatchForIngredient_leavesResolvedIngredientNull() {
-        var draft = draftWithLine("100g butter", "g", "butter");
+    void noMatchForIngredient_leavesLineUnresolved() {
+        var draft = draftWithLine("100g butter", 100.0, "g", "butter");
         when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
 
         var result = importService.importFromUrl("https://example.com");
+        var line = result.getIngredientLines().getFirst();
 
-        assertThat(result.getIngredientLines().getFirst().getResolvedIngredient()).isNull();
+        assertThat(line.getResolvedIngredient()).isNull();
+        assertThat(line.getResolvedUnit()).isNull();
+    }
+
+    @Test
+    void noQuantity_leavesLineUnresolved() {
+        var draft = draftWithLine("flour", null, "g", "flour");
+        when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
+
+        var result = importService.importFromUrl("https://example.com");
+        var line = result.getIngredientLines().getFirst();
+
+        assertThat(line.getResolvedIngredient()).isNull();
+        assertThat(line.getResolvedUnit()).isNull();
     }
 
 }
