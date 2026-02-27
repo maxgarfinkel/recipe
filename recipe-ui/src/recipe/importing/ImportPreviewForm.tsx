@@ -121,7 +121,7 @@ function ImportPreviewForm({ draft }: Props) {
 
                 <div>
                     <h2>Ingredients</h2>
-                    <IngredientList ingredients={ingredients} />
+                    <IngredientList ingredients={ingredients} onRemove={(i) => dispatch({ type: 'remove_ingredient', index: i })} />
 
                     {allIngredients && allIngredients.length > 0 && units && visibleUnresolved.length > 0 && (
                         <div className="mt-4 flex flex-col gap-4">

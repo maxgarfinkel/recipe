@@ -125,7 +125,7 @@ function RecipeEditorPage() {
 
                     <div>
                         <h2>Ingredients</h2>
-                        <IngredientList ingredients={ingredients} />
+                        <IngredientList ingredients={ingredients} onRemove={(i) => dispatch({ type: 'remove_ingredient', index: i })} />
                         <IngredientsSelector
                             ingredients={allIngredients}
                             units={units}
