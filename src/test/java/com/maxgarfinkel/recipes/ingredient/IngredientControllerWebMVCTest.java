@@ -3,11 +3,16 @@ package com.maxgarfinkel.recipes.ingredient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.maxgarfinkel.recipes.ItemNotFound;
 import com.maxgarfinkel.recipes.PageResponse;
+import com.maxgarfinkel.recipes.SecurityConfig;
+import com.maxgarfinkel.recipes.user.AppUserService;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -18,6 +23,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(IngredientController.class)
+@Import(SecurityConfig.class)
+@WithMockUser
 class IngredientControllerWebMVCTest {
 
     @Autowired
@@ -31,6 +38,12 @@ class IngredientControllerWebMVCTest {
 
     @MockBean
     private IngredientAliasService ingredientAliasService;
+
+    @MockBean
+    private JwtDecoder jwtDecoder;
+
+    @MockBean
+    private AppUserService appUserService;
 
     @Test
     void shouldGetIngredients() throws Exception {

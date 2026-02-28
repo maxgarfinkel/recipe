@@ -1,7 +1,9 @@
 spring:
+  config:
+    import: optional:file:./application-local.yaml
   datasource:
-    username: myuser
-    password: secret
-    url: jdbc:postgresql://localhost:5432/mydatabase
+    username: ${DB_USERNAME:myuser}
+    password: ${DB_PASSWORD:secret}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/mydatabase}
 
-# anthropic.api-key: <your-key>
+anthropic.api-key: ${ANTHROPIC_API_KEY:}

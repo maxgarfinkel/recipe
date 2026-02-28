@@ -1,0 +1,5 @@
+CREATE TABLE app_user (
+    id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    sub          VARCHAR(255) NOT NULL UNIQUE,
+    display_name VARCHAR(255) NOT NULL
+);

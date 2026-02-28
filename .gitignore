@@ -38,3 +38,6 @@ out/
 
 ### Nested js project###
 recipe-ui/coverage
+
+### Local config (secrets) ###
+application-local.yaml

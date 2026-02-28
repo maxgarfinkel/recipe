@@ -1,10 +1,12 @@
 import './Header.css';
 import {useState} from "react";
 import { Link } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
 function Header() {
 
     const [showMenu, setShowMenu] = useState(false);
+    const { logout } = useAuth0();
 
     return (<>
                 <header className="w-full">
@@ -37,8 +39,13 @@ function Header() {
                                 <li className="pb-2">
                                     <Link onClick={() => {setShowMenu(!showMenu)}} to={`/import-recipe`}>Import recipe</Link>
                                 </li>
-                                <li>
+                                <li className="pb-2">
                                     <Link onClick={() => {setShowMenu(!showMenu)}} to={`/manage-ingredients`}>Manage ingredients</Link>
+                                </li>
+                                <li>
+                                    <button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>
+                                        Logout
+                                    </button>
                                 </li>
                             </ul>
                         </div>

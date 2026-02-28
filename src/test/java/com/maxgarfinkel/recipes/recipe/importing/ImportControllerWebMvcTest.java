@@ -1,10 +1,15 @@
 package com.maxgarfinkel.recipes.recipe.importing;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.maxgarfinkel.recipes.SecurityConfig;
+import com.maxgarfinkel.recipes.user.AppUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -17,6 +22,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ImportController.class)
+@Import(SecurityConfig.class)
+@WithMockUser
 class ImportControllerWebMvcTest {
 
     @Autowired
@@ -27,6 +34,12 @@ class ImportControllerWebMvcTest {
 
     @MockBean
     private ImportService importService;
+
+    @MockBean
+    private JwtDecoder jwtDecoder;
+
+    @MockBean
+    private AppUserService appUserService;
 
     @Test
     void returns200WithDraftOnSuccess() throws Exception {

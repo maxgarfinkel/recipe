@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestClient;
 
@@ -27,12 +28,16 @@ public class SpringTestBase {
 
     @BeforeEach
     public void beforeEach() {
-        restClient = restClient.mutate().baseUrl("http://localhost:" + port + "/").build();
-        jdbcTemplate.execute("TRUNCATE TABLE ingredient_alias, ingredient, ingredient_quantity, recipe");
+        restClient = restClient.mutate()
+                .baseUrl("http://localhost:" + port + "/")
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer test-token")
+                .build();
+        jdbcTemplate.execute("TRUNCATE TABLE ingredient_alias, ingredient, ingredient_quantity, recipe, app_user");
         jdbcTemplate.execute("ALTER SEQUENCE ingredient_alias_id_seq RESTART WITH 1");
         jdbcTemplate.execute("ALTER SEQUENCE ingredient_seq RESTART WITH 1");
         jdbcTemplate.execute("ALTER SEQUENCE ingredient_quantity_seq RESTART WITH 1");
         jdbcTemplate.execute("ALTER SEQUENCE recipe_seq RESTART WITH 1");
+        jdbcTemplate.execute("ALTER SEQUENCE app_user_id_seq RESTART WITH 1");
     }
 
 }
