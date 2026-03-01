@@ -9,7 +9,7 @@ echo "==> Pushing local commits..."
 git push
 
 echo "==> Deploying to $VPS_HOST..."
-ssh "$VPS_USER@$VPS_HOST" bash <<EOF
+ssh "$VPS_USER@$VPS_HOST" bash -l <<EOF
   set -euo pipefail
   cd $REMOTE_DIR
   git pull
@@ -18,4 +18,4 @@ ssh "$VPS_USER@$VPS_HOST" bash <<EOF
 EOF
 
 echo "==> Done. Tailing logs (Ctrl-C to stop)..."
-ssh "$VPS_USER@$VPS_HOST" "cd $REMOTE_DIR && op run --env-file=.env --no-masking -- docker compose -f compose.prod.yaml logs --tail=50 -f"
+ssh "$VPS_USER@$VPS_HOST" bash -l -c "cd $REMOTE_DIR && op run --env-file=.env --no-masking -- docker compose -f compose.prod.yaml logs --tail=50 -f"
