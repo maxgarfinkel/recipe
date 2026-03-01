@@ -17,7 +17,7 @@ function NewIngredientModal({ name: initialName, quantity: initialQuantity, unit
     const {showToast} = useToast();
     const [name, setName] = useState(initialName);
     const [quantity, setQuantity] = useState(initialQuantity);
-    const [selectedUnitId, setSelectedUnitId] = useState(units.getFirst().id.toString());
+    const [selectedUnitId, setSelectedUnitId] = useState(units.getFirst()?.id?.toString() ?? "");
 
     const inputRef = useRef<HTMLInputElement>(null);
 

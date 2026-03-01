@@ -96,7 +96,6 @@ function IngredientsSelector({ingredients, units, addIngredient, initialSearchTe
     }
 
     return (<>
-        {ingredients.length < 0 && <>Loading...</>}
         {showNewIngredientModal &&
             <NewIngredientModal
                 name={ingredientSearchTerm}
@@ -105,8 +104,7 @@ function IngredientsSelector({ingredients, units, addIngredient, initialSearchTe
                 closeModal={() => {setShowNewIngredientModal(false);}}
                 ingredientCallback={handleNewIngredient}
             />}
-        {ingredients.length > 0 &&
-            <div className="relative">
+        <div className="relative">
                 <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-mid focus-within:border-transparent">
                     {selectedIngredient === null &&
                         <input
@@ -165,7 +163,6 @@ function IngredientsSelector({ingredients, units, addIngredient, initialSearchTe
                     </div>
                 }
             </div>
-        }
         </>
     )
 }

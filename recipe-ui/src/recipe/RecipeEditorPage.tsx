@@ -98,7 +98,7 @@ function RecipeEditorPage() {
         <div className="py-8 px-4 md:px-0">
             <h1>{isEditing ? 'Edit Recipe' : 'New Recipe'}</h1>
             {(ingredientLoading || unitLoading || loading) && <p>Loading...</p>}
-            {allIngredients && allIngredients.length > 0 && units &&
+            {allIngredients && units &&
                 <div className="flex flex-col gap-10">
                     <div className="flex flex-col gap-2 max-w-lg">
                         <label htmlFor="name" className="text-xs font-semibold uppercase tracking-widest text-mid">Recipe Name</label>

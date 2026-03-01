@@ -129,7 +129,7 @@ function ImportPreviewForm({ draft }: Props) {
                         onUpdate={(i, iq) => dispatch({ type: 'update_ingredient', index: i, ingredient: iq })}
                     />
 
-                    {allIngredients && allIngredients.length > 0 && units && visibleUnresolved.length > 0 && (
+                    {allIngredients && units && visibleUnresolved.length > 0 && (
                         <div className="mt-4 flex flex-col gap-4">
                             <p className="text-xs font-semibold uppercase tracking-widest text-mid">
                                 Unresolved ingredients — add manually:
@@ -167,7 +167,7 @@ function ImportPreviewForm({ draft }: Props) {
                         </div>
                     )}
 
-                    {allIngredients && allIngredients.length > 0 && units && (
+                    {allIngredients && units && (
                         <IngredientsSelector
                             ingredients={allIngredients}
                             units={units}
