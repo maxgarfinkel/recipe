@@ -1,6 +1,10 @@
 spring:
   config:
     import: optional:file:./application-local.yaml
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
   datasource:
     username: ${DB_USERNAME:myuser}
     password: ${DB_PASSWORD:secret}

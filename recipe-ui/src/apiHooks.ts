@@ -99,6 +99,20 @@ export function useImportRecipe() {
     return { importDraft, error, loading, importRecipe };
 }
 
+export function useImportRecipeFromImage() {
+    const { data: importDraft, error, loading, execute } = useAsync<RecipeImportDraft>();
+
+    const importRecipeFromImage = useCallback((imageBlob: Blob) => {
+        const formData = new FormData();
+        formData.append('image', imageBlob, 'recipe.jpg');
+        return execute(() =>
+            api.post<RecipeImportDraft>('recipe/import/preview/image', formData).then(r => r.data)
+        );
+    }, [execute]);
+
+    return { importDraft, error, loading, importRecipeFromImage };
+}
+
 export function useFetchIngredientPage() {
     const { data: ingredientPage, error, loading, execute } = useAsync<PageResponse<Ingredient>>();
 

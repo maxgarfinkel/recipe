@@ -17,9 +17,17 @@ public class ImportService {
 
     private final UrlFetcher urlFetcher;
     private final CompositeRecipeExtractor recipeExtractor;
+    private final VisionRecipeExtractor visionRecipeExtractor;
     private final UnitService unitService;
     private final IngredientService ingredientService;
     private final IngredientAliasService ingredientAliasService;
+
+    public RecipeImportDraft importFromImage(byte[] imageBytes, String mediaType) {
+        RecipeImportDraft draft = visionRecipeExtractor.extract(imageBytes, mediaType)
+                .orElseThrow(() -> new RecipeImportException("Could not extract recipe from image"));
+        resolveEntities(draft);
+        return draft;
+    }
 
     public RecipeImportDraft importFromUrl(String url) {
         String html = urlFetcher.fetch(url);

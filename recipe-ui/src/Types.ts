@@ -40,7 +40,7 @@ export interface RecipeImportDraft {
     servings: number | null
     method: string
     sourceUrl: string
-    extractionSource: 'SCHEMA_ORG' | 'LLM'
+    extractionSource: 'SCHEMA_ORG' | 'LLM' | 'VISION'
     ingredientLines: ImportedIngredientLine[]
 }
 
