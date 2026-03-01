@@ -1,0 +1,10 @@
+.git
+.gradle
+build
+.idea
+out
+
+recipe-ui/node_modules
+recipe-ui/dist
+recipe-ui/coverage
+recipe-ui/.env.local

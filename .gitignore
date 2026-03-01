@@ -41,3 +41,4 @@ recipe-ui/coverage
 
 ### Local config (secrets) ###
 application-local.yaml
+.env

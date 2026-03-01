@@ -1,0 +1,14 @@
+{$SERVER_HOST} {
+
+    # Proxy API requests to Spring Boot
+    handle /api/* {
+        reverse_proxy app:8080
+    }
+
+    # Serve the React SPA; fall back to index.html for client-side routing
+    handle {
+        root * /srv/ui
+        try_files {path} /index.html
+        file_server
+    }
+}

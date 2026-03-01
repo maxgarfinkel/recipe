@@ -5,5 +5,12 @@ spring:
     username: ${DB_USERNAME:myuser}
     password: ${DB_PASSWORD:secret}
     url: ${DB_URL:jdbc:postgresql://localhost:5432/mydatabase}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH0_ISSUER_URI:}
+          audiences:
+            - ${AUTH0_AUDIENCE:}
 
 anthropic.api-key: ${ANTHROPIC_API_KEY:}
