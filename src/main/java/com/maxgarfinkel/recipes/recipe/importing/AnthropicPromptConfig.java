@@ -22,4 +22,10 @@ public class AnthropicPromptConfig {
             @Value("${anthropic.prompts.vision-extraction}") Resource resource) throws IOException {
         return resource.getContentAsString(StandardCharsets.UTF_8);
     }
+
+    @Bean("ingredientRefinementPrompt")
+    public String ingredientRefinementPrompt(
+            @Value("${anthropic.prompts.ingredient-refinement}") Resource resource) throws IOException {
+        return resource.getContentAsString(StandardCharsets.UTF_8);
+    }
 }

@@ -24,3 +24,4 @@ anthropic:
   prompts:
     llm-extraction: classpath:prompts/llm-extraction-v3.txt
     vision-extraction: classpath:prompts/vision-extraction-v3.txt
+    ingredient-refinement: classpath:prompts/ingredient-refinement.txt

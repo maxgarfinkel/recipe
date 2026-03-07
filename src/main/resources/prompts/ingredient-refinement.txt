@@ -1,0 +1,39 @@
+Parse the following ingredient strings and return ONLY a JSON array.
+Do not include any prose, explanation, or markdown code fences.
+
+Each element in the array must correspond exactly to one input string and have these fields:
+
+[
+  {
+    "rawText": "The original ingredient string, unchanged",
+    "quantity": 2,
+    "unitName": "unit name or null",
+    "ingredientName": "ingredient name only"
+  }
+]
+
+Field rules:
+
+ingredientName
+- The ingredient only, with no quantities, units, or preparation instructions.
+- Remove words like "finely chopped", "peeled and diced", "roughly torn", "large", "free-range".
+- Correct: "onion", "egg", "plain flour"
+- Incorrect: "finely chopped onion", "2 large free-range eggs"
+
+unitName
+- Use the unit as written in the text where possible.
+- For countable items with no natural unit (e.g. eggs, onions, carrots, cloves), use "unit".
+- For unquantified ingredients (e.g. "salt to taste", "a pinch of pepper"), use null.
+
+quantity
+- A number only. Use null if no quantity is stated (e.g. "salt to taste").
+
+rawText
+- Copy the original input string exactly, with no modifications.
+
+The output array must contain the same number of elements as the input array, in the same order.
+
+Use British English for ingredient names.
+{context}
+Ingredients:
+{ingredients}

@@ -4,15 +4,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class SchemaOrgExtractorTest {
 
     private SchemaOrgExtractor extractor;
+    private LlmIngredientRefiner ingredientRefiner;
 
     @BeforeEach
     void setUp() {
-        extractor = new SchemaOrgExtractor(new ObjectMapper());
+        ingredientRefiner = mock(LlmIngredientRefiner.class);
+        when(ingredientRefiner.refine(any())).thenReturn(Optional.empty());
+        extractor = new SchemaOrgExtractor(new ObjectMapper(), ingredientRefiner);
     }
 
     private String htmlWithJsonLd(String jsonLd) {
@@ -192,6 +201,55 @@ class SchemaOrgExtractorTest {
         var result = extractor.extract(html, "https://example.com");
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void llmRefinement_whenSucceeds_usesRefinedLines() {
+        RecipeImportDraft.ImportedIngredientLine refinedLine = new RecipeImportDraft.ImportedIngredientLine();
+        refinedLine.setRawText("2 finely chopped onions");
+        refinedLine.setQuantity(2.0);
+        refinedLine.setUnitNameHint("unit");
+        refinedLine.setIngredientNameHint("onion");
+        when(ingredientRefiner.refine(any())).thenReturn(Optional.of(List.of(refinedLine)));
+
+        String html = htmlWithJsonLd("""
+                {
+                  "@type": "Recipe",
+                  "name": "Soup",
+                  "recipeIngredient": ["2 finely chopped onions"],
+                  "recipeInstructions": []
+                }
+                """);
+
+        var result = extractor.extract(html, "https://example.com");
+
+        assertThat(result).isPresent();
+        var line = result.get().getIngredientLines().getFirst();
+        assertThat(line.getUnitNameHint()).isEqualTo("unit");
+        assertThat(line.getIngredientNameHint()).isEqualTo("onion");
+        assertThat(line.getQuantity()).isEqualTo(2.0);
+    }
+
+    @Test
+    void llmRefinement_whenFails_fallsBackToIngredientLineParser() {
+        when(ingredientRefiner.refine(any())).thenReturn(Optional.empty());
+
+        String html = htmlWithJsonLd("""
+                {
+                  "@type": "Recipe",
+                  "name": "Cake",
+                  "recipeIngredient": ["200g plain flour"],
+                  "recipeInstructions": []
+                }
+                """);
+
+        var result = extractor.extract(html, "https://example.com");
+
+        assertThat(result).isPresent();
+        var line = result.get().getIngredientLines().getFirst();
+        assertThat(line.getQuantity()).isEqualTo(200.0);
+        assertThat(line.getUnitNameHint()).isEqualTo("g");
+        assertThat(line.getIngredientNameHint()).isEqualTo("plain flour");
     }
 
     @Test

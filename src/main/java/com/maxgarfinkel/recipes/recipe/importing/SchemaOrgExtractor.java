@@ -21,6 +21,7 @@ import java.util.stream.StreamSupport;
 public class SchemaOrgExtractor implements RecipeExtractor {
 
     private final ObjectMapper objectMapper;
+    private final LlmIngredientRefiner ingredientRefiner;
 
     @Override
     public Optional<RecipeImportDraft> extract(String html, String sourceUrl) {
@@ -78,20 +79,17 @@ public class SchemaOrgExtractor implements RecipeExtractor {
         draft.setMethod(parseInstructions(node.path("recipeInstructions")));
         draft.setServings(parseServings(node.path("recipeYield")));
 
-        List<RecipeImportDraft.ImportedIngredientLine> lines = new ArrayList<>();
-        JsonNode ingredients = node.path("recipeIngredient");
-        if (ingredients.isArray()) {
-            for (JsonNode ingredient : ingredients) {
-                String rawText = ingredient.asText();
-                IngredientLineParser.ParsedLine parsed = IngredientLineParser.parse(rawText);
-                RecipeImportDraft.ImportedIngredientLine line = new RecipeImportDraft.ImportedIngredientLine();
-                line.setRawText(rawText);
-                line.setQuantity(parsed.quantity());
-                line.setUnitNameHint(parsed.unitNameHint());
-                line.setIngredientNameHint(parsed.ingredientNameHint());
-                lines.add(line);
+        List<String> rawIngredients = new ArrayList<>();
+        JsonNode ingredientsNode = node.path("recipeIngredient");
+        if (ingredientsNode.isArray()) {
+            for (JsonNode ingredient : ingredientsNode) {
+                rawIngredients.add(ingredient.asText());
             }
         }
+
+        List<RecipeImportDraft.ImportedIngredientLine> lines =
+                ingredientRefiner.refine(rawIngredients)
+                        .orElseGet(() -> parseWithRegex(rawIngredients));
         draft.setIngredientLines(lines);
 
         return draft;
@@ -110,6 +108,20 @@ public class SchemaOrgExtractor implements RecipeExtractor {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    private List<RecipeImportDraft.ImportedIngredientLine> parseWithRegex(List<String> rawIngredients) {
+        List<RecipeImportDraft.ImportedIngredientLine> lines = new ArrayList<>();
+        for (String rawText : rawIngredients) {
+            IngredientLineParser.ParsedLine parsed = IngredientLineParser.parse(rawText);
+            RecipeImportDraft.ImportedIngredientLine line = new RecipeImportDraft.ImportedIngredientLine();
+            line.setRawText(rawText);
+            line.setQuantity(parsed.quantity());
+            line.setUnitNameHint(parsed.unitNameHint());
+            line.setIngredientNameHint(parsed.ingredientNameHint());
+            lines.add(line);
+        }
+        return lines;
     }
 
     private String parseInstructions(JsonNode instructionsNode) {

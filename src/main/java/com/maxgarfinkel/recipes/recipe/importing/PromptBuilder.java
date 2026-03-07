@@ -29,6 +29,13 @@ public class PromptBuilder {
         return template.replace("{context}", buildContext());
     }
 
+    /** For the ingredient refinement flow: substitutes {context} and {ingredients}. */
+    public String buildIngredientPrompt(String template, String ingredientsJson) {
+        return template
+                .replace("{context}", buildContext())
+                .replace("{ingredients}", ingredientsJson);
+    }
+
     private String buildContext() {
         StringBuilder context = new StringBuilder();
 
