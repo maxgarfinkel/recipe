@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -25,14 +26,17 @@ public class LlmExtractor implements RecipeExtractor {
     private final ObjectMapper objectMapper;
     private final RecipeImportDraftParser parser;
     private final String apiKey;
+    private final String promptTemplate;
 
     public LlmExtractor(RestClient.Builder restClientBuilder, ObjectMapper objectMapper,
                         RecipeImportDraftParser parser,
-                        @Value("${anthropic.api-key:}") String apiKey) {
+                        @Value("${anthropic.api-key:}") String apiKey,
+                        @Qualifier("llmExtractionPrompt") String promptTemplate) {
         this.restClient = restClientBuilder.build();
         this.objectMapper = objectMapper;
         this.parser = parser;
         this.apiKey = apiKey;
+        this.promptTemplate = promptTemplate;
     }
 
     @Override
@@ -78,13 +82,7 @@ public class LlmExtractor implements RecipeExtractor {
     }
 
     private String buildPrompt(String text) {
-        return """
-                Extract the recipe from the following text and return ONLY a JSON object with no prose or markdown fences.
-                The JSON must have this exact structure:
-                {"name":"...","servings":4,"method":"...","ingredients":[{"rawText":"2 cups flour","quantity":2,"unitName":"cup","ingredientName":"flour"}]}
-
-                Text:
-                """ + text;
+        return promptTemplate.replace("{text}", text);
     }
 
 }

@@ -3,6 +3,7 @@ package com.maxgarfinkel.recipes.recipe.importing;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -17,24 +18,22 @@ import java.util.Optional;
 public class VisionRecipeExtractor {
 
     private static final String ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-    private static final String EXTRACTION_PROMPT = """
-            Extract the recipe from this image of a recipe book page and return ONLY a JSON object with no prose or markdown fences.
-            The JSON must have this exact structure:
-            {"name":"...","servings":4,"method":"...","ingredients":[{"rawText":"2 cups flour","quantity":2,"unitName":"cup","ingredientName":"flour"}]}
-            """;
 
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final RecipeImportDraftParser parser;
     private final String apiKey;
+    private final String extractionPrompt;
 
     public VisionRecipeExtractor(RestClient.Builder restClientBuilder, ObjectMapper objectMapper,
                                  RecipeImportDraftParser parser,
-                                 @Value("${anthropic.api-key:}") String apiKey) {
+                                 @Value("${anthropic.api-key:}") String apiKey,
+                                 @Qualifier("visionExtractionPrompt") String extractionPrompt) {
         this.restClient = restClientBuilder.build();
         this.objectMapper = objectMapper;
         this.parser = parser;
         this.apiKey = apiKey;
+        this.extractionPrompt = extractionPrompt;
     }
 
     public Optional<RecipeImportDraft> extract(byte[] imageBytes, String mediaType) {
@@ -55,7 +54,7 @@ public class VisionRecipeExtractor {
             );
             Map<String, Object> textContent = Map.of(
                     "type", "text",
-                    "text", EXTRACTION_PROMPT
+                    "text", extractionPrompt
             );
 
             Map<String, Object> requestBody = Map.of(

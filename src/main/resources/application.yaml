@@ -17,4 +17,8 @@ spring:
           audiences:
             - ${AUTH0_AUDIENCE:}
 
-anthropic.api-key: ${ANTHROPIC_API_KEY:}
+anthropic:
+  api-key: ${ANTHROPIC_API_KEY:}
+  prompts:
+    llm-extraction: classpath:prompts/llm-extraction-v1.txt
+    vision-extraction: classpath:prompts/vision-extraction-v1.txt

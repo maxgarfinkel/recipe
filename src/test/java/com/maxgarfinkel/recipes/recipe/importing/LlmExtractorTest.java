@@ -16,6 +16,9 @@ class LlmExtractorTest {
 
     private static final String ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 
+    private static final String TEST_PROMPT_TEMPLATE =
+            "Extract the recipe and return ONLY JSON.\n\nText:\n{text}";
+
     private MockRestServiceServer mockServer;
     private LlmExtractor extractor;
     private ObjectMapper objectMapper;
@@ -23,9 +26,10 @@ class LlmExtractorTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
+        RecipeImportDraftParser parser = new RecipeImportDraftParser(objectMapper);
         RestClient.Builder builder = RestClient.builder();
         mockServer = MockRestServiceServer.bindTo(builder).build();
-        extractor = new LlmExtractor(builder, objectMapper, "test-api-key");
+        extractor = new LlmExtractor(builder, objectMapper, parser, "test-api-key", TEST_PROMPT_TEMPLATE);
     }
 
     /**
@@ -39,7 +43,8 @@ class LlmExtractorTest {
 
     @Test
     void emptyApiKey_returnsEmptyWithNoHttpCalls() {
-        LlmExtractor noKeyExtractor = new LlmExtractor(RestClient.builder(), objectMapper, "");
+        RecipeImportDraftParser parser = new RecipeImportDraftParser(objectMapper);
+        LlmExtractor noKeyExtractor = new LlmExtractor(RestClient.builder(), objectMapper, parser, "", TEST_PROMPT_TEMPLATE);
 
         var result = noKeyExtractor.extract("<html/>", "https://example.com");
 
