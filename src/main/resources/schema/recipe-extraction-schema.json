@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["name", "ingredients"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "servings": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "method": {
+      "type": "string"
+    },
+    "ingredients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rawText"],
+        "properties": {
+          "rawText":        { "type": "string", "minLength": 1 },
+          "quantity":       { "type": "number" },
+          "unitName":       { "type": "string" },
+          "ingredientName": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -2,21 +2,47 @@ package com.maxgarfinkel.recipes.recipe.importing;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
+@Slf4j
 public class RecipeImportDraftParser {
 
     private final ObjectMapper objectMapper;
+    private final JsonSchema schema;
+
+    public RecipeImportDraftParser(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        try (InputStream stream = getClass().getResourceAsStream("/schema/recipe-extraction-schema.json")) {
+            this.schema = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7).getSchema(stream);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to load recipe extraction JSON schema", e);
+        }
+    }
 
     public RecipeImportDraft parse(String json, String sourceUrl, String extractionSource) throws Exception {
         String cleaned = stripMarkdownFences(json);
         JsonNode root = objectMapper.readTree(cleaned);
+
+        Set<ValidationMessage> errors = schema.validate(root);
+        if (!errors.isEmpty()) {
+            String details = errors.stream()
+                    .map(ValidationMessage::getMessage)
+                    .collect(Collectors.joining(", "));
+            log.warn("Recipe extraction response failed schema validation: {}", details);
+            throw new RecipeSchemaValidationException("Schema validation failed: " + details);
+        }
 
         RecipeImportDraft draft = new RecipeImportDraft();
         draft.setSourceUrl(sourceUrl);

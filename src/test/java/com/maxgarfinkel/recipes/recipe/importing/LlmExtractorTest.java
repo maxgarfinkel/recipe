@@ -99,6 +99,17 @@ class LlmExtractorTest {
     }
 
     @Test
+    void responseFailsSchemaValidation_returnsEmpty() throws Exception {
+        // Valid JSON but missing required "name" and "ingredients" fields
+        when(anthropicClient.sendMessages(any())).thenReturn(
+                objectMapper.readTree("{\"content\": [{\"type\": \"text\", \"text\": \"{\\\"foo\\\": \\\"bar\\\"}\"}]}"));
+
+        var result = extractor.extract("<html><body>A recipe</body></html>", "https://example.com");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     void sendMessages_calledWithCorrectModel() throws Exception {
         String json = "{\"name\":\"Cake\",\"servings\":1,\"method\":\"Bake.\",\"ingredients\":[]}";
         when(anthropicClient.sendMessages(any())).thenReturn(anthropicResponse(json));

@@ -49,6 +49,8 @@ public class LlmExtractor implements RecipeExtractor {
             String content = anthropicClient.sendMessages(requestBody)
                     .path("content").path(0).path("text").asText();
             return Optional.of(parser.parse(content, sourceUrl, "LLM"));
+        } catch (RecipeSchemaValidationException e) {
+            return Optional.empty(); // already logged by parser
         } catch (AnthropicApiException e) {
             log.warn("LLM extraction failed: {}", e.getMessage());
             return Optional.empty();

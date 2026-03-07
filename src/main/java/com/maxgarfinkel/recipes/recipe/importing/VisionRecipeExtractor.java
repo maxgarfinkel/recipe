@@ -64,6 +64,8 @@ public class VisionRecipeExtractor {
                 return Optional.empty();
             }
             return Optional.of(parser.parse(content, null, "VISION"));
+        } catch (RecipeSchemaValidationException e) {
+            return Optional.empty(); // already logged by parser
         } catch (AnthropicApiException e) {
             log.warn("Vision extraction failed: {}", e.getMessage());
             return Optional.empty();
