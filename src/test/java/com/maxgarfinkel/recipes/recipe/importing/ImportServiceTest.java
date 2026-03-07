@@ -30,10 +30,11 @@ class ImportServiceTest {
     void setUp() {
         UrlFetcher urlFetcher = mock(UrlFetcher.class);
         recipeExtractor = mock(CompositeRecipeExtractor.class);
+        VisionRecipeExtractor visionRecipeExtractor = mock(VisionRecipeExtractor.class);
         UnitService unitService = mock(UnitService.class);
         IngredientService ingredientService = mock(IngredientService.class);
         IngredientAliasService ingredientAliasService = mock(IngredientAliasService.class);
-        importService = new ImportService(urlFetcher, recipeExtractor, unitService, ingredientService, ingredientAliasService);
+        importService = new ImportService(urlFetcher, recipeExtractor, visionRecipeExtractor, unitService, ingredientService, ingredientAliasService);
 
         when(urlFetcher.fetch(anyString())).thenReturn("<html/>");
         when(unitService.getUnitsAsDtos()).thenReturn(List.of(gramUnit, cupUnit));
