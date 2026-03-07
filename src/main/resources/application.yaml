@@ -22,5 +22,5 @@ anthropic:
   llm-model: ${ANTHROPIC_LLM_MODEL:claude-haiku-4-5-20251001}
   vision-model: ${ANTHROPIC_VISION_MODEL:claude-sonnet-4-6}
   prompts:
-    llm-extraction: classpath:prompts/llm-extraction-v1.txt
-    vision-extraction: classpath:prompts/vision-extraction-v1.txt
+    llm-extraction: classpath:prompts/llm-extraction-v2.txt
+    vision-extraction: classpath:prompts/vision-extraction-v2.txt
