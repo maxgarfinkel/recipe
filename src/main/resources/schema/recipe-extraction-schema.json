@@ -8,8 +8,7 @@
       "minLength": 1
     },
     "servings": {
-      "type": "integer",
-      "minimum": 1
+      "type": ["integer", "null"]
     },
     "method": {
       "type": "string"
