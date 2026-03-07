@@ -10,6 +10,7 @@ import { RecipeImportDraft } from '../../Types';
 
 vi.mock('../../apiHooks', () => ({
     useImportRecipe: vi.fn(),
+    useImportRecipeFromImage: vi.fn(),
 }));
 
 vi.mock('./ImportPreviewForm', () => ({
@@ -23,7 +24,7 @@ vi.mock('./ImportPreviewForm', () => ({
 // ---------------------------------------------------------------------------
 
 import ImportRecipePage from './ImportRecipePage';
-import { useImportRecipe } from '../../apiHooks';
+import { useImportRecipe, useImportRecipeFromImage } from '../../apiHooks';
 import { ToastProvider } from '../../context/ToastContext';
 
 // ---------------------------------------------------------------------------
@@ -67,6 +68,12 @@ function setupHook({
         loading,
         error,
         importRecipe: mockImportRecipe,
+    });
+    vi.mocked(useImportRecipeFromImage).mockReturnValue({
+        importDraft: undefined,
+        loading: false,
+        error: null,
+        importRecipeFromImage: vi.fn(),
     });
 }
 

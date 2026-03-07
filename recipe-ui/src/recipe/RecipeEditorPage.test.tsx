@@ -139,7 +139,7 @@ const mockFetchedRecipe: Recipe = {
 // ---------------------------------------------------------------------------
 
 interface HookOptions {
-    ingredients?: Ingredient[];
+    ingredients?: Ingredient[] | null;
     units?: Units;
     ingredientLoading?: boolean;
     ingredientError?: string | null;
@@ -242,7 +242,7 @@ describe('RecipeEditorPage', () => {
         });
 
         it('does not render the form before data has loaded', () => {
-            setupHooks({ ingredients: [] });
+            setupHooks({ ingredients: null, ingredientLoading: true });
             render(<RecipeEditorPage />, { wrapper: CreateWrapper });
             expect(screen.queryByLabelText(/recipe name/i)).not.toBeInTheDocument();
         });
