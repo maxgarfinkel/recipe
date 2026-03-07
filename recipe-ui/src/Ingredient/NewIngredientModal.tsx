@@ -8,16 +8,17 @@ export interface NewIngredientModalProps {
     name: string;
     quantity: string;
     units: Units;
+    initialUnitId?: string;
     closeModal: () => void;
     ingredientCallback: (ingredient: IngredientQuantity) => void;
 }
 
-function NewIngredientModal({ name: initialName, quantity: initialQuantity, units, closeModal, ingredientCallback }: NewIngredientModalProps) {
+function NewIngredientModal({ name: initialName, quantity: initialQuantity, units, initialUnitId, closeModal, ingredientCallback }: NewIngredientModalProps) {
     const {savedIngredient, saveIngredientError, saveIngredient} = useSaveIngredient();
     const {showToast} = useToast();
     const [name, setName] = useState(initialName);
     const [quantity, setQuantity] = useState(initialQuantity);
-    const [selectedUnitId, setSelectedUnitId] = useState(units.getFirst()?.id?.toString() ?? "");
+    const [selectedUnitId, setSelectedUnitId] = useState(initialUnitId ?? units.getFirst()?.id?.toString() ?? "");
 
     const inputRef = useRef<HTMLInputElement>(null);
 

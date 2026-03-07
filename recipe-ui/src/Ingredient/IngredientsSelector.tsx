@@ -101,6 +101,12 @@ function IngredientsSelector({ingredients, units, addIngredient, initialSearchTe
                 name={ingredientSearchTerm}
                 units={units}
                 quantity={quantity}
+                initialUnitId={initialUnitNameHint
+                    ? units.units.find(u =>
+                        u.name.toLowerCase() === initialUnitNameHint.toLowerCase() ||
+                        u.abbreviation?.toLowerCase() === initialUnitNameHint.toLowerCase()
+                      )?.id?.toString()
+                    : undefined}
                 closeModal={() => {setShowNewIngredientModal(false);}}
                 ingredientCallback={handleNewIngredient}
             />}
