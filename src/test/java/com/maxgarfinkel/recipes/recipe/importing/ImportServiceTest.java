@@ -24,6 +24,7 @@ class ImportServiceTest {
 
     private final UnitDto gramUnit = new UnitDto(1L, "Gram", "g", null, 1.0);
     private final UnitDto cupUnit = new UnitDto(2L, "Cup", "cup", null, 1.0);
+    private final UnitDto noAbbrevUnit = new UnitDto(3L, "Pinch", null, null, 1.0);
     private final IngredientDto flourIngredient = new IngredientDto("flour", 1L, gramUnit);
 
     @BeforeEach
@@ -37,7 +38,7 @@ class ImportServiceTest {
         importService = new ImportService(urlFetcher, recipeExtractor, visionRecipeExtractor, unitService, ingredientService, ingredientAliasService);
 
         when(urlFetcher.fetch(anyString())).thenReturn("<html/>");
-        when(unitService.getUnitsAsDtos()).thenReturn(List.of(gramUnit, cupUnit));
+        when(unitService.getUnitsAsDtos()).thenReturn(List.of(gramUnit, cupUnit, noAbbrevUnit));
         when(ingredientService.getAllAsDto()).thenReturn(List.of(flourIngredient));
         when(ingredientAliasService.findAll()).thenReturn(List.of());
     }
@@ -127,15 +128,39 @@ class ImportServiceTest {
     }
 
     @Test
-    void noMatchForIngredient_leavesLineUnresolved() {
+    void resolvesUnitEvenWhenIngredientNotFound() {
+        // Unit "g" matches gramUnit but "butter" is not in the ingredient list.
+        // Fix A: resolvedUnit should still be set so the frontend can pre-select it.
         var draft = draftWithLine("100g butter", 100.0, "g", "butter");
         when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
 
         var result = importService.importFromUrl("https://example.com");
         var line = result.getIngredientLines().getFirst();
 
+        assertThat(line.getResolvedUnit()).isEqualTo(gramUnit);
         assertThat(line.getResolvedIngredient()).isNull();
-        assertThat(line.getResolvedUnit()).isNull();
+    }
+
+    @Test
+    void resolvesUnitByPluralForm() {
+        // Fix B: plural "grams" should normalise to "g" and match gramUnit.
+        var draft = draftWithLine("100 grams flour", 100.0, "grams", "flour");
+        when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
+
+        var result = importService.importFromUrl("https://example.com");
+
+        assertThat(result.getIngredientLines().getFirst().getResolvedUnit()).isEqualTo(gramUnit);
+    }
+
+    @Test
+    void doesNotThrowWhenUnitHasNullAbbreviation() {
+        // Fix B: null abbreviation must not cause NPE during unit resolution.
+        var draft = draftWithLine("100g flour", 100.0, "g", "flour");
+        when(recipeExtractor.extract(anyString(), anyString())).thenReturn(Optional.of(draft));
+
+        // noAbbrevUnit (abbreviation=null) is in the list — must not cause NPE
+        assertThat(importService.importFromUrl("https://example.com")
+                .getIngredientLines().getFirst().getResolvedUnit()).isEqualTo(gramUnit);
     }
 
     @Test

@@ -169,6 +169,18 @@ class IngredientLineParser {
     // -------------------------------------------------------------------------
 
     /**
+     * Normalise a raw unit hint string to its canonical abbreviation/name using
+     * the synonym table. For example, {@code "grams"} → {@code "g"},
+     * {@code "cups"} → {@code "cup"}. Unknown values pass through unchanged
+     * (lowercased). Returns an empty string for null/blank input.
+     */
+    static String normaliseUnitHint(String hint) {
+        if (hint == null || hint.isBlank()) return hint == null ? "" : hint.trim();
+        String lower = hint.toLowerCase().trim();
+        return UNIT_SYNONYMS.getOrDefault(lower, lower);
+    }
+
+    /**
      * Parse {@code rawText} into a {@link ParsedLine}. Any field may be {@code null}.
      */
     static ParsedLine parse(String rawText) {

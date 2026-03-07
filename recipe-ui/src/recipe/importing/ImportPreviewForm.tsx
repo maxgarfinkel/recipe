@@ -161,6 +161,7 @@ function ImportPreviewForm({ draft }: Props) {
                                         initialSearchTerm={unresolvedLines[idx].ingredientNameHint ?? undefined}
                                         initialQuantity={unresolvedLines[idx].quantity ?? undefined}
                                         initialUnitNameHint={unresolvedLines[idx].unitNameHint ?? undefined}
+                                        initialResolvedUnitId={unresolvedLines[idx].resolvedUnit?.id?.toString()}
                                     />
                                 </div>
                             ))}

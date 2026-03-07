@@ -51,9 +51,13 @@ vi.mock('@mdxeditor/editor', () => ({
 }));
 
 vi.mock('../../Ingredient/IngredientsSelector', () => ({
-    default: ({ addIngredient }: { addIngredient: (iq: typeof mockSelectorIngredientQty) => void }) => (
+    default: ({ addIngredient, initialResolvedUnitId }: {
+        addIngredient: (iq: typeof mockSelectorIngredientQty) => void;
+        initialResolvedUnitId?: string;
+    }) => (
         <button
             data-testid="add-ingredient-btn"
+            data-initial-resolved-unit-id={initialResolvedUnitId}
             onClick={() => addIngredient(mockSelectorIngredientQty)}
         >
             Add Test Ingredient
@@ -285,5 +289,26 @@ describe('ImportPreviewForm', () => {
         render(<ImportPreviewForm draft={mockDraft} />, { wrapper: Wrapper });
         fireEvent.click(screen.getByRole('button', { name: /done with 2 cups milk/i }));
         expect(screen.queryByText(/unresolved ingredients/i)).not.toBeInTheDocument();
+    });
+
+    it('passes initialResolvedUnitId to IngredientsSelector for partially-resolved lines', () => {
+        const partialDraft: RecipeImportDraft = {
+            ...mockDraft,
+            ingredientLines: [
+                {
+                    rawText: '2 cups milk',
+                    quantity: 2,
+                    ingredientNameHint: 'milk',
+                    unitNameHint: 'cups',
+                    resolvedIngredient: null,
+                    resolvedUnit: { id: BigInt(2), name: 'Cup', abbreviation: 'cup', base: null, baseFactor: 1 },
+                },
+            ],
+        };
+        render(<ImportPreviewForm draft={partialDraft} />, { wrapper: Wrapper });
+
+        // The per-hint IngredientsSelector button (first) should carry the resolved unit id
+        const [hintBtn] = screen.getAllByTestId('add-ingredient-btn');
+        expect(hintBtn).toHaveAttribute('data-initial-resolved-unit-id', '2');
     });
 });

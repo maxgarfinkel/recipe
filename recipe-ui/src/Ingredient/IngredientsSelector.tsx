@@ -11,9 +11,10 @@ export interface IngredientsSelectorProps {
     initialSearchTerm?: string
     initialQuantity?: number
     initialUnitNameHint?: string
+    initialResolvedUnitId?: string
 }
 
-function IngredientsSelector({ingredients, units, addIngredient, initialSearchTerm, initialQuantity, initialUnitNameHint}: IngredientsSelectorProps) {
+function IngredientsSelector({ingredients, units, addIngredient, initialSearchTerm, initialQuantity, initialUnitNameHint, initialResolvedUnitId}: IngredientsSelectorProps) {
     const searchInputRef = useRef<HTMLInputElement>(null);
     const quantityFieldRef = useRef<HTMLInputElement>(null);
 
@@ -28,6 +29,16 @@ function IngredientsSelector({ingredients, units, addIngredient, initialSearchTe
     const [selectedResult, setSelectedResultIndex] = useState<number | null>(null);
 
     const [showNewIngredientModal, setShowNewIngredientModal] = useState<boolean>(false);
+
+    // Prefer a backend-resolved unit ID; fall back to text-based lookup from the hint.
+    const effectiveInitialUnitId: string | undefined =
+        initialResolvedUnitId ??
+        (initialUnitNameHint
+            ? units.units.find(u =>
+                u.name.toLowerCase() === initialUnitNameHint.toLowerCase() ||
+                u.abbreviation?.toLowerCase() === initialUnitNameHint.toLowerCase()
+              )?.id?.toString()
+            : undefined);
 
     const onKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
 
@@ -61,12 +72,7 @@ function IngredientsSelector({ingredients, units, addIngredient, initialSearchTe
 
     const selectIngredient = (ingredient: Ingredient) => {
         setSelectedIngredient(ingredient);
-        const hintUnit = initialUnitNameHint
-            ? units.units.find(u =>
-                u.name.toLowerCase() === initialUnitNameHint.toLowerCase() ||
-                u.abbreviation.toLowerCase() === initialUnitNameHint.toLowerCase())
-            : null;
-        setSelectedUnitId((hintUnit ?? ingredient.defaultUnit).id.toString());
+        setSelectedUnitId(effectiveInitialUnitId ?? ingredient.defaultUnit.id.toString());
         setIngredientSearchResults([]);
         quantityFieldRef.current?.focus();
     }
@@ -101,12 +107,7 @@ function IngredientsSelector({ingredients, units, addIngredient, initialSearchTe
                 name={ingredientSearchTerm}
                 units={units}
                 quantity={quantity}
-                initialUnitId={initialUnitNameHint
-                    ? units.units.find(u =>
-                        u.name.toLowerCase() === initialUnitNameHint.toLowerCase() ||
-                        u.abbreviation?.toLowerCase() === initialUnitNameHint.toLowerCase()
-                      )?.id?.toString()
-                    : undefined}
+                initialUnitId={effectiveInitialUnitId}
                 closeModal={() => {setShowNewIngredientModal(false);}}
                 ingredientCallback={handleNewIngredient}
             />}

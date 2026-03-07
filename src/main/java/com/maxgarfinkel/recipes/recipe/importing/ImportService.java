@@ -59,18 +59,25 @@ public class ImportService {
                 }
             }
 
-            if (resolvedUnit != null && resolvedIngredient != null) {
+            if (resolvedUnit != null) {
+                // Always store the resolved unit — even when the ingredient is new/unknown —
+                // so the frontend can pre-select it in the NewIngredientModal.
                 line.setResolvedUnit(resolvedUnit);
+            }
+            if (resolvedUnit != null && resolvedIngredient != null) {
+                // Only store a resolved ingredient when the unit is also resolved; a line
+                // with a known ingredient but no unit would silently fall out of both the
+                // auto-resolved list and the unresolved (manual) list in the UI.
                 line.setResolvedIngredient(resolvedIngredient);
             }
         }
     }
 
     private UnitDto resolveUnit(String hint, List<UnitDto> allUnits) {
-        String lowerHint = hint.toLowerCase();
+        String normalised = IngredientLineParser.normaliseUnitHint(hint);
         return allUnits.stream()
-                .filter(u -> u.getName().equalsIgnoreCase(lowerHint)
-                        || u.getAbbreviation().equalsIgnoreCase(lowerHint))
+                .filter(u -> u.getName().equalsIgnoreCase(normalised)
+                        || (u.getAbbreviation() != null && u.getAbbreviation().equalsIgnoreCase(normalised)))
                 .findFirst()
                 .orElse(null);
     }
