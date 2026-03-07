@@ -3,6 +3,7 @@ import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { useImportRecipe, useImportRecipeFromImage } from '../../apiHooks';
 import ImportPreviewForm from './ImportPreviewForm';
+import RobotEatingAnimation from './RobotEatingAnimation';
 
 type Tab = 'url' | 'photo';
 
@@ -24,6 +25,15 @@ function ImportRecipePage() {
 
     if (urlDraft) return <ImportPreviewForm draft={urlDraft} />;
     if (imageDraft) return <ImportPreviewForm draft={imageDraft} />;
+
+    if (urlLoading || imageLoading) {
+        return (
+            <div className="py-8 px-4 md:px-0">
+                <h1>Import Recipe</h1>
+                <RobotEatingAnimation />
+            </div>
+        );
+    }
 
     const handleUrlSubmit = (e: React.FormEvent) => {
         e.preventDefault();

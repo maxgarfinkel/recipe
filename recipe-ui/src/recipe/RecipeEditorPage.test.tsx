@@ -174,7 +174,7 @@ function setupHooks({
     updating = false,
 }: HookOptions = {}) {
     vi.mocked(useFetchIngredients).mockReturnValue({
-        allIngredients: ingredients,
+        allIngredients: ingredients as Ingredient[],
         ingredientLoading,
         ingredientError,
         fetchIngredients: vi.fn(),

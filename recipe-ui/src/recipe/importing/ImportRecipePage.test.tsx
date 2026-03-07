@@ -109,11 +109,12 @@ describe('ImportRecipePage', () => {
         expect(mockImportRecipe).toHaveBeenCalledWith('https://example.com/recipe');
     });
 
-    it('disables button while loading', () => {
+    it('shows animation and hides form while loading', () => {
         setupHook({ loading: true });
         render(<ImportRecipePage />, { wrapper: Wrapper });
 
-        expect(screen.getByRole('button', { name: /importing/i })).toBeDisabled();
+        expect(screen.getByRole('img', { name: /robot eating/i })).toBeInTheDocument();
+        expect(screen.queryByLabelText(/recipe url/i)).not.toBeInTheDocument();
     });
 
     it('shows error message when error is set', () => {
