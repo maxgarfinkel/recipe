@@ -27,7 +27,10 @@ class LlmExtractorTest {
         objectMapper = new ObjectMapper();
         RecipeImportDraftParser parser = new RecipeImportDraftParser(objectMapper);
         anthropicClient = mock(AnthropicClient.class);
-        extractor = new LlmExtractor(anthropicClient, parser, "claude-haiku-4-5-20251001", TEST_PROMPT_TEMPLATE);
+        PromptBuilder promptBuilder = mock(PromptBuilder.class);
+        when(promptBuilder.buildTextPrompt(any(), any()))
+                .thenAnswer(inv -> ((String) inv.getArgument(0)).replace("{text}", inv.getArgument(1)));
+        extractor = new LlmExtractor(anthropicClient, parser, promptBuilder, "claude-haiku-4-5-20251001", TEST_PROMPT_TEMPLATE);
         when(anthropicClient.isConfigured()).thenReturn(true);
     }
 

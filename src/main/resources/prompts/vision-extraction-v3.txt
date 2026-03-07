@@ -1,0 +1,51 @@
+Extract the recipe from this image of a recipe book page and return ONLY a JSON object.
+Do not include any prose, explanation, or markdown code fences.
+
+The JSON must conform exactly to this structure:
+
+{
+  "name": "Recipe name as a string",
+  "servings": 4,
+  "method": "Full method as a single string. Incorporate any preparation instructions removed from ingredient names (e.g. 'finely chop the onion'). Do not otherwise alter the method.",
+  "ingredients": [
+    {
+      "rawText": "The original ingredient text, unmodified",
+      "quantity": 2,
+      "unitName": "The canonical unit name (see rules below)",
+      "ingredientName": "The ingredient name only, with no preparation instructions"
+    }
+  ]
+}
+
+Field rules:
+
+name
+- Use the recipe name as stated. If none is given, infer a concise name from the ingredients and method.
+
+servings
+- Use the number stated. If not specified, use null.
+
+method
+- Write as a single string.
+- If an ingredient includes preparation instructions (e.g. "finely chopped", "roughly torn", "peeled and diced"), remove them from the ingredient name and incorporate them naturally into the relevant step in the method.
+- Do not otherwise alter the method text.
+
+ingredients[].ingredientName
+- The ingredient only, with no quantities, units, or preparation instructions.
+- Correct: "onion", "smoked salmon", "plain flour"
+- Incorrect: "finely chopped onion", "2 cups of flour"
+
+ingredients[].unitName
+- Use the unit as written in the text where possible.
+- For countable items with no natural unit (e.g. eggs, carrots, onions), use "unit".
+- For unquantified ingredients (e.g. "salt to taste", "a pinch of pepper"), set unit name null and quantity to null.
+
+ingredients[].quantity
+- A number only. Do not include the unit.
+- Use null if no quantity is specified.
+
+ingredients[].rawText
+- Copy the original ingredient text exactly as it appears in the source, with no modifications.
+
+Use British English throughout for names and words. Always use the unit specified in the text.
+{context}

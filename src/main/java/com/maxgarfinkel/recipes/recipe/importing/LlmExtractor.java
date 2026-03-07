@@ -20,15 +20,18 @@ public class LlmExtractor implements RecipeExtractor {
 
     private final AnthropicClient anthropicClient;
     private final RecipeImportDraftParser parser;
+    private final PromptBuilder promptBuilder;
     private final String model;
     private final String promptTemplate;
 
     public LlmExtractor(AnthropicClient anthropicClient,
                         RecipeImportDraftParser parser,
+                        PromptBuilder promptBuilder,
                         @Value("${anthropic.llm-model:claude-haiku-4-5-20251001}") String model,
                         @Qualifier("llmExtractionPrompt") String promptTemplate) {
         this.anthropicClient = anthropicClient;
         this.parser = parser;
+        this.promptBuilder = promptBuilder;
         this.model = model;
         this.promptTemplate = promptTemplate;
     }
@@ -44,7 +47,7 @@ public class LlmExtractor implements RecipeExtractor {
             Map<String, Object> requestBody = Map.of(
                     "model", model,
                     "max_tokens", 2048,
-                    "messages", List.of(Map.of("role", "user", "content", buildPrompt(text)))
+                    "messages", List.of(Map.of("role", "user", "content", promptBuilder.buildTextPrompt(promptTemplate, text)))
             );
             String content = anthropicClient.sendMessages(requestBody)
                     .path("content").path(0).path("text").asText();
@@ -65,7 +68,5 @@ public class LlmExtractor implements RecipeExtractor {
         return text.length() > MAX_TEXT_LENGTH ? text.substring(0, MAX_TEXT_LENGTH) : text;
     }
 
-    private String buildPrompt(String text) {
-        return promptTemplate.replace("{text}", text);
-    }
+
 }

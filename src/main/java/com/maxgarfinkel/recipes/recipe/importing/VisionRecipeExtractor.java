@@ -16,17 +16,20 @@ public class VisionRecipeExtractor {
 
     private final AnthropicClient anthropicClient;
     private final RecipeImportDraftParser parser;
+    private final PromptBuilder promptBuilder;
     private final String model;
-    private final String extractionPrompt;
+    private final String extractionPromptTemplate;
 
     public VisionRecipeExtractor(AnthropicClient anthropicClient,
                                  RecipeImportDraftParser parser,
+                                 PromptBuilder promptBuilder,
                                  @Value("${anthropic.vision-model:claude-sonnet-4-6}") String model,
-                                 @Qualifier("visionExtractionPrompt") String extractionPrompt) {
+                                 @Qualifier("visionExtractionPrompt") String extractionPromptTemplate) {
         this.anthropicClient = anthropicClient;
         this.parser = parser;
+        this.promptBuilder = promptBuilder;
         this.model = model;
-        this.extractionPrompt = extractionPrompt;
+        this.extractionPromptTemplate = extractionPromptTemplate;
     }
 
     public Optional<RecipeImportDraft> extract(byte[] imageBytes, String mediaType) {
@@ -51,7 +54,7 @@ public class VisionRecipeExtractor {
                                         "media_type", mediaType,
                                         "data", base64Image
                                 )),
-                                Map.of("type", "text", "text", extractionPrompt)
+                                Map.of("type", "text", "text", promptBuilder.buildImagePrompt(extractionPromptTemplate))
                         )
                 ))
         );
