@@ -1,12 +1,9 @@
 package com.maxgarfinkel.recipes.recipe.importing;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
 
 import java.util.Base64;
 import java.util.List;
@@ -17,70 +14,61 @@ import java.util.Optional;
 @Slf4j
 public class VisionRecipeExtractor {
 
-    private static final String ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-
-    private final RestClient restClient;
-    private final ObjectMapper objectMapper;
+    private final AnthropicClient anthropicClient;
     private final RecipeImportDraftParser parser;
-    private final String apiKey;
+    private final String model;
     private final String extractionPrompt;
 
-    public VisionRecipeExtractor(RestClient.Builder restClientBuilder, ObjectMapper objectMapper,
+    public VisionRecipeExtractor(AnthropicClient anthropicClient,
                                  RecipeImportDraftParser parser,
-                                 @Value("${anthropic.api-key:}") String apiKey,
+                                 @Value("${anthropic.vision-model:claude-sonnet-4-6}") String model,
                                  @Qualifier("visionExtractionPrompt") String extractionPrompt) {
-        this.restClient = restClientBuilder.build();
-        this.objectMapper = objectMapper;
+        this.anthropicClient = anthropicClient;
         this.parser = parser;
-        this.apiKey = apiKey;
+        this.model = model;
         this.extractionPrompt = extractionPrompt;
     }
 
     public Optional<RecipeImportDraft> extract(byte[] imageBytes, String mediaType) {
-        if (apiKey == null || apiKey.isBlank()) {
+        if (!anthropicClient.isConfigured()) {
+            return Optional.empty();
+        }
+        if (mediaType == null || mediaType.isBlank()) {
+            log.warn("Vision extraction skipped: image content type is missing.");
             return Optional.empty();
         }
 
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+        Map<String, Object> requestBody = Map.of(
+                "model", model,
+                "max_tokens", 2048,
+                "messages", List.of(Map.of(
+                        "role", "user",
+                        "content", List.of(
+                                Map.of("type", "image", "source", Map.of(
+                                        "type", "base64",
+                                        "media_type", mediaType,
+                                        "data", base64Image
+                                )),
+                                Map.of("type", "text", "text", extractionPrompt)
+                        )
+                ))
+        );
+
         try {
-            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
-
-            Map<String, Object> imageContent = Map.of(
-                    "type", "image",
-                    "source", Map.of(
-                            "type", "base64",
-                            "media_type", mediaType,
-                            "data", base64Image
-                    )
-            );
-            Map<String, Object> textContent = Map.of(
-                    "type", "text",
-                    "text", extractionPrompt
-            );
-
-            Map<String, Object> requestBody = Map.of(
-                    "model", "claude-sonnet-4-6",
-                    "max_tokens", 2048,
-                    "messages", List.of(Map.of(
-                            "role", "user",
-                            "content", List.of(imageContent, textContent)
-                    ))
-            );
-
-            String responseBody = restClient.post()
-                    .uri(ANTHROPIC_API_URL)
-                    .header("x-api-key", apiKey)
-                    .header("anthropic-version", "2023-06-01")
-                    .header("content-type", "application/json")
-                    .body(objectMapper.writeValueAsString(requestBody))
-                    .retrieve()
-                    .body(String.class);
-
-            JsonNode response = objectMapper.readTree(responseBody);
-            String content = response.path("content").path(0).path("text").asText();
-
+            String content = anthropicClient.sendMessages(requestBody)
+                    .path("content").path(0).path("text").asText();
+            if (content.isBlank()) {
+                log.warn("Anthropic returned empty content for vision extraction.");
+                return Optional.empty();
+            }
             return Optional.of(parser.parse(content, null, "VISION"));
+        } catch (AnthropicApiException e) {
+            log.warn("Vision extraction failed: {}", e.getMessage());
+            return Optional.empty();
         } catch (Exception e) {
-            log.debug("Vision extraction failed: {}", e.getMessage());
+            log.warn("Vision extraction failed due to unexpected error: {}", e.getMessage());
             return Optional.empty();
         }
     }

@@ -35,7 +35,11 @@ public class ImportController {
         if (image.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        RecipeImportDraft draft = importService.importFromImage(image.getBytes(), image.getContentType());
+        String contentType = image.getContentType();
+        if (contentType == null || contentType.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        RecipeImportDraft draft = importService.importFromImage(image.getBytes(), contentType);
         return ResponseEntity.ok(draft);
     }
 }

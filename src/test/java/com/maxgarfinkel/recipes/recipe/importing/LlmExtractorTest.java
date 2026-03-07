@@ -1,25 +1,24 @@
 package com.maxgarfinkel.recipes.recipe.importing;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class LlmExtractorTest {
-
-    private static final String ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 
     private static final String TEST_PROMPT_TEMPLATE =
             "Extract the recipe and return ONLY JSON.\n\nText:\n{text}";
 
-    private MockRestServiceServer mockServer;
+    private AnthropicClient anthropicClient;
     private LlmExtractor extractor;
     private ObjectMapper objectMapper;
 
@@ -27,36 +26,34 @@ class LlmExtractorTest {
     void setUp() {
         objectMapper = new ObjectMapper();
         RecipeImportDraftParser parser = new RecipeImportDraftParser(objectMapper);
-        RestClient.Builder builder = RestClient.builder();
-        mockServer = MockRestServiceServer.bindTo(builder).build();
-        extractor = new LlmExtractor(builder, objectMapper, parser, "test-api-key", TEST_PROMPT_TEMPLATE);
+        anthropicClient = mock(AnthropicClient.class);
+        extractor = new LlmExtractor(anthropicClient, parser, "claude-haiku-4-5-20251001", TEST_PROMPT_TEMPLATE);
+        when(anthropicClient.isConfigured()).thenReturn(true);
     }
 
     /**
-     * Wraps a JSON content string as an Anthropic API response body.
-     * The content is JSON-encoded (quotes and newlines escaped) for embedding in the outer JSON.
+     * Wraps a JSON content string as an Anthropic API response JsonNode.
      */
-    private String anthropicResponse(String content) {
+    private JsonNode anthropicResponse(String content) throws Exception {
         String escaped = content.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
-        return "{\"content\": [{\"type\": \"text\", \"text\": \"" + escaped + "\"}]}";
+        String json = "{\"content\": [{\"type\": \"text\", \"text\": \"" + escaped + "\"}]}";
+        return objectMapper.readTree(json);
     }
 
     @Test
-    void emptyApiKey_returnsEmptyWithNoHttpCalls() {
-        RecipeImportDraftParser parser = new RecipeImportDraftParser(objectMapper);
-        LlmExtractor noKeyExtractor = new LlmExtractor(RestClient.builder(), objectMapper, parser, "", TEST_PROMPT_TEMPLATE);
+    void notConfigured_returnsEmptyWithNoApiCalls() {
+        when(anthropicClient.isConfigured()).thenReturn(false);
 
-        var result = noKeyExtractor.extract("<html/>", "https://example.com");
+        var result = extractor.extract("<html/>", "https://example.com");
 
         assertThat(result).isEmpty();
-        mockServer.verify(); // no calls recorded
+        verify(anthropicClient, never()).sendMessages(any());
     }
 
     @Test
-    void successfulApiResponse_populatesDraft() {
+    void successfulApiResponse_populatesDraft() throws Exception {
         String json = "{\"name\":\"Cake\",\"servings\":4,\"method\":\"Mix and bake.\",\"ingredients\":[{\"rawText\":\"2 cups flour\",\"quantity\":2,\"unitName\":\"cup\",\"ingredientName\":\"flour\"}]}";
-        mockServer.expect(requestTo(ANTHROPIC_API_URL))
-                .andRespond(withSuccess(anthropicResponse(json), MediaType.APPLICATION_JSON));
+        when(anthropicClient.sendMessages(any())).thenReturn(anthropicResponse(json));
 
         var result = extractor.extract("<html><body>Cake recipe: 2 cups flour, mix and bake.</body></html>", "https://example.com");
 
@@ -72,9 +69,8 @@ class LlmExtractorTest {
     }
 
     @Test
-    void apiReturns500_returnsEmpty() {
-        mockServer.expect(requestTo(ANTHROPIC_API_URL))
-                .andRespond(withServerError());
+    void apiThrowsAnthropicApiException_returnsEmpty() {
+        when(anthropicClient.sendMessages(any())).thenThrow(new AnthropicApiException("Server error: 500"));
 
         var result = extractor.extract("<html><body>A recipe</body></html>", "https://example.com");
 
@@ -82,11 +78,9 @@ class LlmExtractorTest {
     }
 
     @Test
-    void malformedJsonResponse_returnsEmpty() {
-        mockServer.expect(requestTo(ANTHROPIC_API_URL))
-                .andRespond(withSuccess(
-                        "{\"content\": [{\"type\": \"text\", \"text\": \"{not valid json}\"}]}",
-                        MediaType.APPLICATION_JSON));
+    void malformedJsonResponse_returnsEmpty() throws Exception {
+        when(anthropicClient.sendMessages(any())).thenReturn(
+                objectMapper.readTree("{\"content\": [{\"type\": \"text\", \"text\": \"{not valid json}\"}]}"));
 
         var result = extractor.extract("<html><body>A recipe</body></html>", "https://example.com");
 
@@ -94,14 +88,23 @@ class LlmExtractorTest {
     }
 
     @Test
-    void responseWrappedInMarkdownFences_stillParsedCorrectly() {
+    void responseWrappedInMarkdownFences_stillParsedCorrectly() throws Exception {
         String fencedContent = "```json\n{\"name\":\"Soup\",\"servings\":2,\"method\":\"Boil.\",\"ingredients\":[]}\n```";
-        mockServer.expect(requestTo(ANTHROPIC_API_URL))
-                .andRespond(withSuccess(anthropicResponse(fencedContent), MediaType.APPLICATION_JSON));
+        when(anthropicClient.sendMessages(any())).thenReturn(anthropicResponse(fencedContent));
 
         var result = extractor.extract("<html><body>Soup recipe</body></html>", "https://example.com");
 
         assertThat(result).isPresent();
         assertThat(result.get().getName()).isEqualTo("Soup");
+    }
+
+    @Test
+    void sendMessages_calledWithCorrectModel() throws Exception {
+        String json = "{\"name\":\"Cake\",\"servings\":1,\"method\":\"Bake.\",\"ingredients\":[]}";
+        when(anthropicClient.sendMessages(any())).thenReturn(anthropicResponse(json));
+
+        extractor.extract("<html><body>Cake</body></html>", "https://example.com");
+
+        verify(anthropicClient).sendMessages(argThat(body -> body.toString().contains("claude-haiku-4-5-20251001")));
     }
 }
