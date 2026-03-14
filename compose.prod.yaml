@@ -11,7 +11,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "127.0.0.1:5432:5432"
     volumes:
       - caddy_data:/data       # Let's Encrypt certificates
       - caddy_config:/config   # Caddy runtime state
@@ -38,6 +37,8 @@ services:
     restart: unless-stopped
 
   db:
+    ports:
+      - "127.0.0.1:5432:5432"
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: ${DB_NAME:-mydatabase}
