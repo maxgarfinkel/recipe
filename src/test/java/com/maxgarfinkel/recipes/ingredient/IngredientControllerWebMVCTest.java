@@ -1,6 +1,7 @@
 package com.maxgarfinkel.recipes.ingredient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.maxgarfinkel.recipes.ingredient.DuplicateIngredientException;
 import com.maxgarfinkel.recipes.ItemNotFound;
 import com.maxgarfinkel.recipes.PageResponse;
 import com.maxgarfinkel.recipes.SecurityConfig;
@@ -162,6 +163,22 @@ class IngredientControllerWebMVCTest {
                 .andExpectAll(
                         status().isNotFound(),
                         jsonPath("$.detail", Matchers.equalTo("Ingredient with id: 99 not found"))
+                );
+    }
+
+    @Test
+    void shouldReturn409WhenDuplicateIngredientName() throws Exception {
+        var ingredient = new IngredientDto("basil", null, null);
+
+        given(ingredientService.create("basil", null))
+                .willThrow(new DuplicateIngredientException("basil"));
+
+        mockMvc.perform(post("/api/v1/ingredient/")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(ingredient)))
+                .andExpectAll(
+                        status().isConflict(),
+                        jsonPath("$.detail", Matchers.equalTo("An ingredient with the name 'basil' already exists"))
                 );
     }
 }

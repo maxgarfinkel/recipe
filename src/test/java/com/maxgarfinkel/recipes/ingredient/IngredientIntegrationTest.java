@@ -6,10 +6,13 @@ import com.maxgarfinkel.recipes.SpringTestBase;
 import com.maxgarfinkel.recipes.unit.UnitDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class IngredientIntegrationTest extends SpringTestBase {
 
@@ -151,5 +154,61 @@ public class IngredientIntegrationTest extends SpringTestBase {
                 .body(new ParameterizedTypeReference<>() {});
 
         assertThat(afterDelete).isEmpty();
+    }
+
+    @Test
+    public void creatingDuplicateIngredientNameReturns409() throws JsonProcessingException {
+        String json = objectMapper.writeValueAsString(new IngredientDto("basil", null, null));
+        restClient.post().uri("/api/v1/ingredient/").body(json).retrieve().toBodilessEntity();
+
+        assertThatThrownBy(() ->
+                restClient.post().uri("/api/v1/ingredient/").body(json).retrieve().toBodilessEntity()
+        ).isInstanceOf(HttpClientErrorException.class)
+                .satisfies(e -> assertThat(((HttpClientErrorException) e).getStatusCode())
+                        .isEqualTo(HttpStatusCode.valueOf(409)));
+    }
+
+    @Test
+    public void creatingIngredientWithDifferentCaseReturns409() throws JsonProcessingException {
+        String json1 = objectMapper.writeValueAsString(new IngredientDto("Basil", null, null));
+        restClient.post().uri("/api/v1/ingredient/").body(json1).retrieve().toBodilessEntity();
+
+        String json2 = objectMapper.writeValueAsString(new IngredientDto("BASIL", null, null));
+        assertThatThrownBy(() ->
+                restClient.post().uri("/api/v1/ingredient/").body(json2).retrieve().toBodilessEntity()
+        ).isInstanceOf(HttpClientErrorException.class)
+                .satisfies(e -> assertThat(((HttpClientErrorException) e).getStatusCode())
+                        .isEqualTo(HttpStatusCode.valueOf(409)));
+    }
+
+    @Test
+    public void creatingIngredientWithSurroundingWhitespaceReturns409() throws JsonProcessingException {
+        String json1 = objectMapper.writeValueAsString(new IngredientDto("basil", null, null));
+        restClient.post().uri("/api/v1/ingredient/").body(json1).retrieve().toBodilessEntity();
+
+        String json2 = objectMapper.writeValueAsString(new IngredientDto("  basil  ", null, null));
+        assertThatThrownBy(() ->
+                restClient.post().uri("/api/v1/ingredient/").body(json2).retrieve().toBodilessEntity()
+        ).isInstanceOf(HttpClientErrorException.class)
+                .satisfies(e -> assertThat(((HttpClientErrorException) e).getStatusCode())
+                        .isEqualTo(HttpStatusCode.valueOf(409)));
+    }
+
+    @Test
+    public void updatingIngredientToExistingNameReturns409() throws JsonProcessingException {
+        String basilJson = objectMapper.writeValueAsString(new IngredientDto("basil", null, null));
+        restClient.post().uri("/api/v1/ingredient/").body(basilJson).retrieve().toBodilessEntity();
+
+        String oreganoJson = objectMapper.writeValueAsString(new IngredientDto("oregano", null, null));
+        IngredientDto oregano = restClient.post().uri("/api/v1/ingredient/").body(oreganoJson).retrieve()
+                .body(IngredientDto.class);
+        assertThat(oregano).isNotNull();
+
+        String updateJson = objectMapper.writeValueAsString(new IngredientDto("basil", oregano.getId(), null));
+        assertThatThrownBy(() ->
+                restClient.put().uri("/api/v1/ingredient/" + oregano.getId()).body(updateJson).retrieve().toBodilessEntity()
+        ).isInstanceOf(HttpClientErrorException.class)
+                .satisfies(e -> assertThat(((HttpClientErrorException) e).getStatusCode())
+                        .isEqualTo(HttpStatusCode.valueOf(409)));
     }
 }

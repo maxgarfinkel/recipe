@@ -31,8 +31,13 @@ public class IngredientService {
     }
 
     public IngredientDto create(String ingredientName, Long unitId) {
+        String trimmed = ingredientName.trim();
+        String normalised = trimmed.toLowerCase();
+        ingredientRepository.findByNormalisedName(normalised).ifPresent(existing -> {
+            throw new DuplicateIngredientException(trimmed);
+        });
         var ingredient = new Ingredient();
-        ingredient.setName(ingredientName);
+        ingredient.setName(trimmed);
         if(unitId != null) {
             ingredient.setDefaultUnit(unitService.getEntityById(unitId));
         }
@@ -40,9 +45,16 @@ public class IngredientService {
     }
 
     public IngredientDto update(Long id, String name, Long unitId) {
+        String trimmed = name.trim();
+        String normalised = trimmed.toLowerCase();
+        ingredientRepository.findByNormalisedName(normalised)
+                .filter(existing -> !existing.getId().equals(id))
+                .ifPresent(existing -> {
+                    throw new DuplicateIngredientException(trimmed);
+                });
         return ingredientRepository.findById(id)
                 .map(i -> {
-                    i.setName(name);
+                    i.setName(trimmed);
                     i.setDefaultUnit(unitId != null ? unitService.getEntityById(unitId) : null);
                     return ingredientRepository.save(i).toDto();
                 })
